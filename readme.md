@@ -41,10 +41,10 @@ Acode/
 Enhance Acode's capabilities by adding new languages easily. Just create a file with the language code (e.g., en-us for English) in [`src/lang/`](https://github.com/Acode-Foundation/Acode/tree/main/src/lang) and include it in [`src/lib/lang.js`](https://github.com/Acode-Foundation/Acode/blob/main/src/lib/lang.js). Manage strings across languages effortlessly using utility commands:
 
 ```shell
-yarn lang add
-yarn lang remove
-yarn lang search
-yarn lang update
+npm run lang add
+npm run lang remove
+npm run lang search
+npm run lang update
 ```
 
 ## • Building the Application
@@ -88,7 +88,7 @@ npm run check # it runs both lint and format
 Also, ensure that your code is well-documented and includes comments where necessary.
 
 > [!Note]
-> You can use any package manager like npm or yarn or pnpm or bun.
+> You can use any package manager like npm or npm run or pnpm or bun.
 > You can use your editor specific Biomejs plugin for auto-formatting and linting based on Acode's configs.
 
 ## • Contributors
