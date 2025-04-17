@@ -54,13 +54,13 @@ To build the APK, ensure you have Node.js, NPM, and Apache Cordova installed on 
 1. Initial setup (required only once):
 
 ```shell
-yarn setup
+npm install
 ```
 
 2. Build the project:
 
 ```shell
-yarn build <platform (android)> <free|paid> <p|prod|d|dev>
+npm run build-release <free|paid> <p|prod|d|dev>
 ```
 
 ## • Contributing
@@ -81,9 +81,9 @@ Acode Editor is an open-source project, and we welcome contributions from the co
 
 Please ensure that your code is clean, well-formatted, and follows the project's coding standards. Acode uses [Biomejs](https://biomejs.dev/) for formatting and linting and [typos](https://github.com/crate-ci/typos) for low false positives source code spell checking. You can use following commands to lints/format your code locally:
 ```shell
-yarn lint # for linting
-yarn format # for formatting
-yarn check # it runs both lint and format
+npm run lint # for linting
+npm run format # for formatting
+npm run check # it runs both lint and format
 ```
 Also, ensure that your code is well-documented and includes comments where necessary.
 
