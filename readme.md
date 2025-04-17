@@ -55,6 +55,7 @@ To build the APK, ensure you have Node.js, NPM, and Apache Cordova installed on 
 
 ```shell
 npm install
+npm run sync
 ```
 
 2. Build the project:
