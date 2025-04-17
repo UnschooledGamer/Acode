@@ -5,13 +5,43 @@ set -e #exit on error
 appFreePaid="$1"
 mode="$2"
 
-function info(){
-    echo -e "\e[34;1m[*] \e[37m$1\e[0m"
-}
 
 function success(){
     echo -e "\e[32;1m[+] \e[37m$1\e[0m"
 }
+
+function info(){
+    echo -e "\e[34;1m[*] \e[37m$1\e[0m"
+}
+
+function warn(){
+    echo -e "\e[33;1m[~] \e[37m$1\e[0m"
+}
+
+function error(){
+    echo -e "\e[31;1m[!] \e[37m$1\e[0m"
+}
+
+if [ -z "$JAVA_HOME" ]; then
+    warn "JAVA_HOME is not set. Please set it to your Java installation path."
+else
+    info "JAVA_HOME is set to $JAVA_HOME"
+fi
+
+if [ -z "$ANDROID_HOME" ]; then
+    warn "ANDROID_HOME is not set. Please set it to your Android SDK installation path."
+else
+    info "ANDROID_HOME is set to $ANDROID_HOME"
+fi
+
+
+java_version=$(java -version 2>&1 | awk -F[\".] '/version/ {print $2}')
+if [ "$java_version" -ge 21 ]; then
+    :
+else
+    error "Java version 21 or higher is required. Please install openjdk 21 or higher."
+    exit 1
+fi
 
 
 if [ -z "$mode" ]
@@ -63,4 +93,3 @@ else
 fi
 
 success "Build finished"
-success "Output path: $PROJECT_ROOT/android/app/build/outputs/apk/"
