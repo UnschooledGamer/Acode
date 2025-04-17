@@ -912,6 +912,7 @@ public class System extends CordovaPlugin {
     } else if (type.equals("NO_SUGGESTIONS_AGGRESSIVE")) {
       mode = 1;
     }
-    webView.setInputType(mode);
+    //no such method
+    //webView.setInputType(mode);
   }
 }
