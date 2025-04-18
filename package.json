@@ -5,7 +5,7 @@
   "description": "Acode is a code editor for android",
   "scripts": {
     "lang": "node ./utils/lang.js",
-    "build": "sh scripts/build.sh",
+    "build": "node scripts/build.js",
     "clean": "sh scripts/gradlew-link clean",
     "plugin": "sh utils/scripts/plugin.sh",
     "setup": "npx cap sync",
