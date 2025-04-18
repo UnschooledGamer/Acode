@@ -9,9 +9,7 @@ android {
 
 apply from: "../capacitor-cordova-android-plugins/cordova.variables.gradle"
 dependencies {
-
-    implementation "com.google.android.gms:play-services-ads:20.6.0"
-    implementation "com.google.android.ump:user-messaging-platform:1.0.0+"
+    implementation project(':capacitor-app')
     implementation "androidx.webkit:webkit:1.4.0"
     implementation "commons-net:commons-net:3.11.1"
     implementation "com.android.billingclient:billing:6.0.1"
