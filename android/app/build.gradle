@@ -8,21 +8,25 @@ android {
         applicationId "com.foxdebug.acode"
 
 
-        //sdk versions and other stuff should be changed from versions.build.gradle
+        //sdk versions and other stuff should be changed from variables.build.gradle
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+
+        //fdroid expect this as literals so no fancy logic
+        versionCode 957
+        versionName "1.11.1"
 
         flavorDimensions += "default"
         productFlavors{
             free{
                 applicationId = "com.foxdebug.acodefree"
+                dimension = "default"
                 buildConfigField("boolean", "PAID", "false")
             }
 
             paid{
                 applicationId = "com.foxdebug.acode"
+                dimension = "default"
                 buildConfigField("boolean", "PAID", "true")
             }
         }

@@ -1,9 +1,16 @@
-const { execSync, exec } = require("child_process");
+const { execSync } = require("child_process");
 const path = require("path");
 
-// Input arguments
-const appFreePaid = process.argv[2] || "paid";
-const mode = process.argv[3] || "d";
+// CLI args: appType (free/paid), buildMode (d/p or debug/prod)
+const appType = (process.argv[2] || "paid").toLowerCase();
+const buildMode = (process.argv[3] || "d").toLowerCase();
+
+// Normalize app type and mode
+const normalizedType = appType.startsWith("f") ? "Free" : "Paid";
+const normalizedMode =
+  buildMode === "p" || buildMode === "prod" || buildMode === "release"
+    ? "Release"
+    : "Debug";
 
 // Terminal colors
 const colors = {
@@ -15,65 +22,62 @@ const colors = {
   white: "\x1b[37m",
 };
 
-// Log functions
-function success(msg) {
-  console.log(`${colors.green}[+] ${colors.white}${msg}${colors.reset}`);
-}
+// Logging helpers
+const log = {
+  success: (msg) =>
+    console.log(`${colors.green}[+] ${colors.white}${msg}${colors.reset}`),
+  info: (msg) =>
+    console.log(`${colors.blue}[*] ${colors.white}${msg}${colors.reset}`),
+  warn: (msg) =>
+    console.log(`${colors.yellow}[~] ${colors.white}${msg}${colors.reset}`),
+  error: (msg) => {
+    console.error(`${colors.red}[!] ${colors.white}${msg}${colors.reset}`);
+    process.exit(1);
+  },
+};
 
-function info(msg) {
-  console.log(`${colors.blue}[*] ${colors.white}${msg}${colors.reset}`);
-}
-
-function warn(msg) {
-  console.log(`${colors.yellow}[~] ${colors.white}${msg}${colors.reset}`);
-}
-
-function error(msg) {
-  console.error(`${colors.red}[!] ${colors.white}${msg}${colors.reset}`);
-  process.exit(1);
-}
-
-// Check JAVA_HOME and ANDROID_HOME
+// Check JAVA_HOME
 if (!process.env.JAVA_HOME) {
-  warn("JAVA_HOME is not set. Please set it to your Java installation path.");
-} else {
-  info(`JAVA_HOME is set to ${process.env.JAVA_HOME}`);
-}
-
-if (!process.env.ANDROID_HOME) {
-  warn(
-    "ANDROID_HOME is not set. Please set it to your Android SDK installation path."
+  log.warn(
+    "JAVA_HOME is not set. Please set it to your Java installation path."
   );
 } else {
-  info(`ANDROID_HOME is set to ${process.env.ANDROID_HOME}`);
+  log.info(`JAVA_HOME: ${process.env.JAVA_HOME}`);
 }
 
-// Check Java version
+// Check ANDROID_HOME
+if (!process.env.ANDROID_HOME) {
+  log.warn("ANDROID_HOME is not set. Please set it to your Android SDK path.");
+} else {
+  log.info(`ANDROID_HOME: ${process.env.ANDROID_HOME}`);
+}
+
+// Verify Java version is 21+
 try {
-  const javaVersionOutput = execSync("java -version 2>&1").toString();
-  const match = javaVersionOutput.match(/version\s+"(\d+)\.(\d+)/);
+  const versionOutput = execSync("java -version 2>&1").toString();
+  const match = versionOutput.match(/version\s+"(\d+)\.(\d+)/);
   const majorVersion = match ? parseInt(match[1]) : null;
   if (!majorVersion || majorVersion < 21) {
-    error(
-      "Java version 21 or higher is required. Please install openjdk 21 or higher."
-    );
+    log.error("Java 21 or higher is required.");
   }
-} catch (e) {
-  error("Failed to check Java version. Is Java installed?");
+} catch {
+  log.error("Java is not installed or not accessible.");
 }
 
-// Log build info
-info(`Building app with type: ${appFreePaid}`);
-info(`Building app with mode: ${mode}`);
+// Display config
+log.info(`App Type: ${normalizedType}`);
+log.info(`Build Mode: ${normalizedMode}`);
 
-// Admob settings
+// Constants
+//for some reason ad id is not properly added to the android manifest by this cordovalugin so instead of editing this
+//edit the android/app/src/free/AndroidManifest.xml file
 const AD_APP_ID = "ca-app-pub-5911839694379275~4255791238";
 const PROJECT_ROOT = execSync("npm prefix").toString().trim();
 
 try {
-  if (appFreePaid === "p" || appFreePaid === "paid") {
-    info("Removing Admob plugins if installed");
-
+  // Plugin logic based on app type
+  if (normalizedType === "Paid") {
+    log.info("Removing Admob plugins for paid build");
     if (
       execSync("cordova plugin ls")
         .toString()
@@ -83,7 +87,6 @@ try {
         stdio: "inherit",
       });
     }
-
     if (
       execSync("cordova plugin ls").toString().includes("admob-plus-cordova")
     ) {
@@ -92,7 +95,7 @@ try {
       });
     }
   } else {
-    info("Adding Admob plugins");
+    log.info("Adding Admob plugins for free build");
     execSync("cordova plugin add cordova-plugin-consent@2.4.0 --save", {
       stdio: "inherit",
     });
@@ -102,20 +105,21 @@ try {
     );
   }
 
+  // Webpack build
   const webpackMode =
-    mode === "p" || mode === "prod" ? "production" : "development";
-
+    normalizedMode.toLowerCase() === "release" ? "production" : "development";
   execSync(`webpack --progress --mode ${webpackMode}`, { stdio: "inherit" });
+
   execSync("node ./utils/loadStyles.js", { stdio: "inherit" });
   execSync("npm run sync", { stdio: "inherit" });
 
-  const gradleCmd =
-    mode === "p" || mode === "prod" ? "assembleRelease" : "assembleDebug";
-  execSync(`sh "${PROJECT_ROOT}/scripts/gradlew-link" ${gradleCmd}`, {
+  // Final Gradle command
+  const gradleTask = `assemble${normalizedType}${normalizedMode}`;
+  execSync(`sh "${PROJECT_ROOT}/scripts/gradlew-link" ${gradleTask}`, {
     stdio: "inherit",
   });
 
-  success("Build finished");
+  log.success("Build completed successfully.");
 } catch (e) {
-  error(`Build failed: ${e.message}`);
+  log.error(`Build failed: ${e.message}`);
 }
