@@ -65,6 +65,9 @@ dependencies {
     implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
     implementation project(':capacitor-android')
     implementation project(':capacitor-cordova-android-plugins')
+
+    //sftp
+    implementation "com.sshtools:maverick-synergy-client:3.1.2"
 }
 
 
