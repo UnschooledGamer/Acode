@@ -32,7 +32,7 @@ function patchBuildGradle(filePath) {
   let contents = fs.readFileSync(filePath, 'utf8');
 
   if (!contents.includes('android {')) {
-    console.log(`⏭️ Skipping ${filePath} (no android block)`);
+    console.log(`⏭️  Skipping ${filePath} (no android block)`);
     return;
   }
 
