@@ -1,6 +1,12 @@
 apply plugin: 'com.android.application'
+apply from: 'capacitor.build.gradle'
+apply plugin: 'org.jetbrains.kotlin.android'
 
 android {
+    kotlinOptions {
+        jvmTarget = '21'
+    }
+
     namespace "com.foxdebug.acode"
     compileSdk rootProject.ext.compileSdkVersion
     android.buildFeatures.buildConfig true
@@ -65,7 +71,7 @@ dependencies {
     implementation project(':capacitor-cordova-android-plugins')
 }
 
-apply from: 'capacitor.build.gradle'
+
 
 try {
     def servicesJSON = file('google-services.json')
