@@ -1,6 +1,14 @@
 package com.foxdebug.acode.plugins
 
+import com.foxdebug.acode.MainActivity
 import com.getcapacitor.PluginCall
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
 
 inline fun PluginCall.autoRejectOnError(onFailure:(Throwable?)-> Unit, invoke:()-> Unit){
     runCatching {
@@ -26,4 +34,10 @@ inline fun PluginCall.existsNot(key: String,onFailure:(()-> Unit) = {}){
         reject("$key is not set")
         onFailure.invoke()
     }
+}
+
+fun async(context: CoroutineContext = Dispatchers.IO,
+          start: CoroutineStart = CoroutineStart.DEFAULT,
+          block: suspend CoroutineScope.() -> Unit){
+    MainActivity.lifeCycleScope.launch(context,start,block)
 }
