@@ -26,6 +26,7 @@ import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
 import special.anonymous
+import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.IOException
 import java.net.URI
@@ -85,7 +86,7 @@ class Sftp : Plugin() {
                     it.printStackTrace()
                     ssh?.close()
                     reject("Failed to initialize SFTP subsystem: ${it.message.toString()}")
-                    return@asyncContext
+                    return@withContext
                 }
 
                 runCatching {
@@ -372,6 +373,142 @@ class Sftp : Plugin() {
             resolve(result)
         }
 
+    }
+
+    @PluginMethod
+    fun mkdir(call: PluginCall) = with(call){
+        async{
+            existsNot("path"){
+                return@async
+            }
+            if (ssh == null || sftp == null){
+                reject("Not Connected")
+                return@async
+            }
+            val path = getString("path")!!
+            runCatching {
+                sftp!!.mkdir(path);
+                resolve()
+            }.onFailure {
+                it.printStackTrace()
+                reject(it.message)
+            }
+
+        }
+    }
+
+    @PluginMethod
+    fun rm(call: PluginCall) = with(call){
+        async{
+            existsNot("path"){
+                return@async
+            }
+
+            if (ssh == null || sftp == null){
+                reject("Not Connected")
+                return@async
+            }
+            val path = getString("path")!!
+            val force = getBoolean("force") == true
+            val recursive = getBoolean("recursive") == true
+
+            runCatching {
+                sftp!!.rm(path,force,recursive)
+                resolve()
+            }.onFailure {
+                it.printStackTrace()
+                reject(it.message)
+            }
+
+        }
+    }
+
+    @PluginMethod
+    fun pwd(call: PluginCall) = with(call){
+        async{
+            if (ssh == null || sftp == null){
+                reject("Not Connected")
+                return@async
+            }
+
+            runCatching {
+                val pwd = sftp!!.pwd()
+                val result = JSObject()
+                result.put("result",pwd)
+                resolve(result)
+            }.onFailure {
+                it.printStackTrace()
+                reject(it.message)
+            }
+
+
+        }
+    }
+
+    @PluginMethod
+    fun rename(call: PluginCall) = with(call){
+        async{
+            runCatching {
+                if (ssh == null || sftp == null){
+                    reject("Not Connected")
+                    return@async
+                }
+
+                existsNot("oldPath"){
+                    return@async
+                }
+                existsNot("newPath"){
+                    return@async
+                }
+
+                val oldPath = getString("oldPath")!!
+                val newPath = getString("newPath")!!
+                sftp!!.rename(oldPath,newPath)
+                resolve()
+            }.onFailure {
+                it.printStackTrace()
+                reject(it.message)
+            }
+        }
+    }
+
+    @PluginMethod
+    fun createFile(call: PluginCall) = with(call){
+        async{
+            runCatching {
+                if (ssh == null || sftp == null){
+                    reject("Not Connected")
+                    return@async
+                }
+
+                existsNot("path"){
+                    return@async
+                }
+
+                val path = getString("path")!!
+                val content = getString("content").toString()
+
+
+                if (sftp!!.exists(path)){
+                    reject("File already exists")
+                    return@async
+                }
+
+                ByteArrayInputStream(content.toByteArray(Charsets.UTF_8)).use {
+                    runCatching {
+                        sftp!!.put(it,path)
+                    }.onFailure {
+                        it.printStackTrace()
+                        reject(it.message)
+                    }
+                }
+
+
+            }.onFailure {
+                it.printStackTrace()
+                reject(it.message)
+            }
+        }
     }
 
     @PluginMethod
