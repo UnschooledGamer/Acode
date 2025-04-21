@@ -30,13 +30,14 @@ class MainActivity : BridgeActivity(){
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        activityRef = WeakReference(this)
-
         //register plugins
         registerPlugin(Sftp::class.java)
         registerPlugin(NativeLayer::class.java)
 
+
+        //register plugins before calling super
+        super.onCreate(savedInstanceState)
+        activityRef = WeakReference(this)
     }
 
     override fun onDestroy() {
