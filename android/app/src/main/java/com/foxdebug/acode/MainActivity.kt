@@ -4,7 +4,6 @@ import android.content.Context
 import android.os.Bundle
 import androidx.lifecycle.lifecycleScope
 import com.foxdebug.acode.plugins.NativeLayer
-import com.foxdebug.acode.plugins.Sftp
 import com.getcapacitor.BridgeActivity
 import kotlinx.coroutines.CoroutineScope
 import java.lang.ref.WeakReference
