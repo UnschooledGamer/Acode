@@ -1,5 +1,7 @@
+import { Directory, Encoding, Filesystem } from "@capacitor/filesystem";
 import ajax from "@deadlyjack/ajax";
 import fsOperation from "fileSystem";
+import path from "path-browserify";
 import Url from "utils/Url";
 import { decode, encode } from "utils/encodings";
 import helpers from "utils/helpers";
@@ -67,20 +69,27 @@ const internalFs = {
 	 * @param {string} filename
 	 * @returns {Promise}
 	 */
+
 	delete(filename) {
 		return new Promise((resolve, reject) => {
-			reject = setMessage(reject);
-			window.resolveLocalFileSystemURL(
-				filename,
-				(entry) => {
-					if (entry.isFile) {
-						entry.remove(resolve, reject);
+			console.log("Deleting " + filename);
+
+			Filesystem.stat({ path: filename })
+				.then((stats) => {
+					if (stats.type === "directory") {
+						return Filesystem.rmdir({ path: filename, recursive: true });
 					} else {
-						entry.removeRecursively(resolve, reject);
+						return Filesystem.deleteFile({ path: filename });
 					}
-				},
-				reject,
-			);
+				})
+				.then(() => {
+					console.log("Deleted successfully!");
+					resolve();
+				})
+				.catch((error) => {
+					console.error("Error while deleting:", error);
+					reject(error);
+				});
 		});
 	},
 
