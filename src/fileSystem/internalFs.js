@@ -8,19 +8,20 @@ import helpers from "utils/helpers";
 
 const internalFs = {
 	/**
-	 *
+	 * List files from a Directory (not recursive)
 	 * @param {string} url
 	 * @returns {Promise}
 	 */
 	listDir(url) {
 		return new Promise((resolve, reject) => {
 			reject = setMessage(reject);
-			window.resolveLocalFileSystemURL(url, success, reject);
 
-			function success(fs) {
-				const reader = fs.createReader();
-				reader.readEntries(resolve, reject);
-			}
+			FileSystem.readdir({ path: url }).then((result) => {
+				console.log(`Listed files/directories successfully for url: ${url}, Result: `, result)
+				resolve(result)
+			}).catch((error) => {
+				console.log(`Error while listing Directory for url: ${url}, error:`, error)
+			})
 		});
 	},
 
