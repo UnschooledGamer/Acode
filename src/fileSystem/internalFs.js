@@ -16,7 +16,7 @@ const internalFs = {
 		return new Promise((resolve, reject) => {
 			reject = setMessage(reject);
 
-			FileSystem.readdir({ path: url })
+			Filesystem.readdir({ path: url })
 				.then((result) => {
 					console.log(
 						`Listed files/directories successfully for url: ${url}, Result: `,
