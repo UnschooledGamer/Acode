@@ -16,12 +16,20 @@ const internalFs = {
 		return new Promise((resolve, reject) => {
 			reject = setMessage(reject);
 
-			FileSystem.readdir({ path: url }).then((result) => {
-				console.log(`Listed files/directories successfully for url: ${url}, Result: `, result)
-				resolve(result)
-			}).catch((error) => {
-				console.log(`Error while listing Directory for url: ${url}, error:`, error)
-			})
+			FileSystem.readdir({ path: url })
+				.then((result) => {
+					console.log(
+						`Listed files/directories successfully for url: ${url}, Result: `,
+						result,
+					);
+					resolve(result);
+				})
+				.catch((error) => {
+					console.log(
+						`Error while listing Directory for url: ${url}, error:`,
+						error,
+					);
+				});
 		});
 	},
 
