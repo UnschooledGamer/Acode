@@ -42,11 +42,9 @@ jobs:
 
     # Step 6: Set up Android SDK
     - name: Set up Android SDK
-      uses: android-actions/setup-android@v2
+      uses: android-actions/setup-android@v3
       with:
-        api-level: 31
-        target: android-31
-        build-tools: 31.0.0
+        cmdline-tools-version: 13114758
 
     # Step 7: Cache Android SDK components
     - name: Cache Android SDK components
