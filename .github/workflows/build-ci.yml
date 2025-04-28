@@ -1,0 +1,73 @@
+name: Build and Upload APK
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Step 1: Checkout the repository
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    # Step 2: Set up Java
+    - name: Set up Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'zulu'
+        java-version: '21'
+
+    # Step 3: Set up Node.js LTS
+    - name: Set up Node.js LTS
+      uses: actions/setup-node@v3
+      with:
+        node-version: 'lts/*'
+        cache: 'npm'
+    - run: npm i && npm run sync
+    # Step 4: Cache Gradle dependencies
+    - name: Cache Gradle dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.gradle/caches
+        key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          gradle-${{ runner.os }}-
+
+    # Step 5: Set up Gradle
+    - name: Set up Gradle
+      uses: gradle/gradle-build-action@v2
+
+    # Step 6: Set up Android SDK
+    - name: Set up Android SDK
+      uses: android-actions/setup-android@v2
+      with:
+        api-level: 31
+        target: android-31
+        build-tools: 31.0.0
+
+    # Step 7: Cache Android SDK components
+    - name: Cache Android SDK components
+      uses: actions/cache@v3
+      with:
+        path: ~/.android
+        key: android-sdk-${{ runner.os }}-${{ hashFiles('**/build.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          android-sdk-${{ runner.os }}-
+
+    # Step 8: Grant execute permission for Gradle wrapper
+    - name: Make Gradle wrapper executable
+      run: chmod +x ./gradlew
+
+    # Step 9: Build the project
+    - name: Build APK
+      run: ./gradlew assembleDebug # Update the task if your APK is built differently
+
+    # Step 10: Find and upload APK as an artifact
+    - name: Upload APK artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: apk-artifact
+        path: '**/*.apk' # This finds all APK files in the repository
