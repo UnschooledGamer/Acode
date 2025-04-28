@@ -55,15 +55,11 @@ jobs:
         restore-keys: |
           android-sdk-${{ runner.os }}-
 
-    # Step 8: Grant execute permission for Gradle wrapper
-    - name: Make Gradle wrapper executable
-      run: chmod +x ./gradlew
-
-    # Step 9: Build the project
+    # Step 8: Build the project
     - name: Build APK
       run: npm run build paid dev
 
-    # Step 10: Find and upload APK as an artifact
+    # Step 9: Find and upload APK as an artifact
     - name: Upload APK artifact
       uses: actions/upload-artifact@v4
       with:
