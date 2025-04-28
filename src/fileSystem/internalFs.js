@@ -22,7 +22,11 @@ const internalFs = {
 						`Listed files/directories successfully for url: ${url}, Result: `,
 						result,
 					);
-					resolve(result);
+					resolve(result.files.map((obj) => {
+						obj.url = obj.uri;
+						delete obj.uri;
+						return obj;
+					}))
 				})
 				.catch((error) => {
 					console.log(
