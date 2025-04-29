@@ -22,11 +22,19 @@ const internalFs = {
 						`Listed files/directories successfully for url: ${url}, Result: `,
 						result,
 					);
-					resolve(result.files.map((obj) => {
-						obj.url = obj.uri;
-						delete obj.uri;
-						return obj;
-					}))
+					resolve(
+						result.files.map((file) => ({
+						 name: file.name,
+						 url: file.uri,
+						 size: file.size,
+						 ctime: file.ctime,
+						 mtime: file.mtime,
+				                 isFile: file.type === "file",
+						 isDirectory: file.type === "directory",
+						 // TODO: Link(symlink/hardlink) file detection if possible.
+						 isLink: false
+					        })),
+					)
 				})
 				.catch((error) => {
 					console.log(
