@@ -29,7 +29,7 @@ const internalFs = {
 						 size: file.size,
 						 ctime: file.ctime,
 						 mtime: file.mtime,
-				                 isFile: file.type === "file",
+						 isFile: file.type === "file",
 						 isDirectory: file.type === "directory",
 						 // TODO: Link(symlink/hardlink) file detection if possible.
 						 isLink: false
