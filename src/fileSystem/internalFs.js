@@ -22,11 +22,19 @@ const internalFs = {
 						`Listed files/directories successfully for url: ${url}, Result: `,
 						result,
 					);
-					resolve(result.files.map((obj) => {
-						obj.url = obj.uri;
-						delete obj.uri;
-						return obj;
-					}))
+					resolve(
+						result.files.map((file) => ({
+							name: file.name,
+							url: file.uri,
+							size: file.size,
+							ctime: file.ctime,
+							mtime: file.mtime,
+							isFile: file.type === "file",
+							isDirectory: file.type === "directory",
+							// TODO: Link(symlink/hardlink) file detection if possible.
+							isLink: false,
+						})),
+					);
 				})
 				.catch((error) => {
 					console.log(
@@ -182,21 +190,26 @@ const internalFs = {
 	createDir(path, dirname) {
 		return new Promise((resolve, reject) => {
 			reject = setMessage(reject);
-			window.resolveLocalFileSystemURL(
-				path,
-				(fs) => {
-					fs.getDirectory(
-						dirname,
-						{ create: true },
-						async () => {
-							const stats = await this.stats(Url.join(path, dirname));
-							resolve(stats.url);
-						},
-						reject,
+			// TODO!: ask about `recursive` option
+			Filesystem.mkdir({
+				path: `${path}${dirname}`,
+				recursive: false,
+			})
+				.then(() => {
+					console.log(
+						`Created "${dirname}" Directory successfully on path: ${path}`,
 					);
-				},
-				reject,
-			);
+					Filesystem.stat({ path: `${path}${dirname}` })
+						.then((stats) => resolve(stats.url))
+						.catch(reject);
+				})
+				.catch((error) => {
+					console.error(
+						`Failed to create ${dirname} directory in path: ${path}, error:`,
+						error,
+					);
+					reject(error);
+				});
 		});
 	},
 
