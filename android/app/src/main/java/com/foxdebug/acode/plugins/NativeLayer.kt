@@ -27,12 +27,12 @@ class NativeLayer : Plugin() {
      * Upon clicking "OK", the dialog will resolve the call.
      */
     @PluginMethod
-    fun showDialog(call: PluginCall) = with(call){
-        autoRejectOnError(onFailure = {}){
-            existsNot("title"){
+    fun showDialog(call: PluginCall) = with(call) {
+        autoRejectOnError(onFailure = {}) {
+            existsNot("title") {
                 return@with
             }
-            existsNot("message"){
+            existsNot("message") {
                 return@with
             }
 
@@ -48,7 +48,7 @@ class NativeLayer : Plugin() {
                 AlertDialog.Builder(context).apply {
                     setTitle(title)
                     setMessage(message)
-                    setPositiveButton("OK",null)
+                    setPositiveButton("OK", null)
                     show()
                 }
                 call.resolve()
@@ -84,7 +84,7 @@ class NativeLayer : Plugin() {
      */
     @PluginMethod
     fun launchIntent(call: PluginCall) {
-        call.autoRejectOnError(onFailure = {}){
+        call.autoRejectOnError(onFailure = {}) {
             val constructorNumber = call.getInt("constructor_number") ?: run {
                 call.reject("Missing 'constructor_number'")
                 return
