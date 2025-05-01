@@ -1,5 +1,15 @@
+const os = require('os');
 const { execSync } = require("child_process");
 const path = require("path");
+
+
+const platform = os.platform(); // e.g., 'linux', 'darwin', 'win32',"*bsd"
+
+if (platform !== "linux" && !platform.includes("bsd") && platform !== "darwin") {
+  log.error(`Unsupported platform: ${platform}. A Unix-like system is required.`);
+}
+
+
 
 // CLI args: appType (free/paid), buildMode (d/p or debug/prod)
 const appType = (process.argv[2] || "paid").toLowerCase();
@@ -52,17 +62,25 @@ if (!process.env.ANDROID_HOME) {
   log.info(`ANDROID_HOME: ${process.env.ANDROID_HOME}`);
 }
 
-// Verify Java version is 21+
+// Verify Java version is 21
 try {
   const versionOutput = execSync("java -version 2>&1").toString();
-  const match = versionOutput.match(/version\s+"(\d+)\.(\d+)/);
+  const match = versionOutput.match(/version\s+"(\d+)(?:\.(\d+))?/);
   const majorVersion = match ? parseInt(match[1]) : null;
+
+  const major = match?.[1];
+  const minor = match?.[2];
+  const versionString = major ? `${major}${minor ? '.' + minor : ''}` : 'unknown';
+  log.info(`Current Java version is ${versionString}.`);
+  
+
   if (!majorVersion || majorVersion < 21) {
-    log.error("Java 21 or higher is required.");
+    log.error(`Java 21 is required.`);
   }
 } catch {
   log.error("Java is not installed or not accessible.");
 }
+
 
 // Display config
 log.info(`App Type: ${normalizedType}`);
@@ -104,6 +122,8 @@ try {
       { stdio: "inherit" }
     );
   }
+
+  execSync(`mkdir -p ${PROJECT_ROOT}/www/css/build && mkdir -p ${PROJECT_ROOT}/www/js/build`)
 
   // Webpack build
   const webpackMode =
