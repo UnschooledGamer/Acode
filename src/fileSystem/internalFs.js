@@ -266,11 +266,14 @@ const internalFs = {
 	stats(filename) {
 		return new Promise((resolve, reject) => {
 			reject = setMessage(reject);
-			window.resolveLocalFileSystemURL(
-				filename,
-				(entry) => {
+			Filesystem.stat({ path: filename })
+				.then((entry) => {
+					console.log(
+						`Successfully returned stats for "${filename}", Result: `,
+						entry,
+					);
 					sdcard.stats(
-						entry.nativeURL,
+						entry.uri,
 						(stats) => {
 							helpers.defineDeprecatedProperty(
 								stats,
@@ -287,13 +290,19 @@ const internalFs = {
 						},
 						reject,
 					);
-				},
-				reject,
-			);
+				})
+				.catch((error) => {
+					console.error(
+						`Failed to show stats for "${filename}", error:`,
+						error,
+					);
+					reject(error);
+				});
 		});
 	},
 
 	/**
+	 * TODO: check this function with Rohit.
 	 * Verify if a file or directory exists
 	 * @param {string} src
 	 * @param {string} dest
@@ -302,36 +311,48 @@ const internalFs = {
 	verify(src, dest) {
 		return new Promise((resolve, reject) => {
 			reject = setMessage(reject);
-			window.resolveLocalFileSystemURL(
-				src,
-				(srcEntry) => {
-					window.resolveLocalFileSystemURL(
-						dest,
-						(destEntry) => {
-							window.resolveLocalFileSystemURL(
-								Url.join(destEntry.nativeURL, srcEntry.name),
-								(res) => {
-									reject({
-										code: 12,
-									});
-								},
-								(err) => {
-									if (err.code === 1) {
-										resolve({
-											src: srcEntry,
-											dest: destEntry,
-										});
-									} else {
-										reject(err);
-									}
-								},
-							);
-						},
-						reject,
+
+			// check if source exists
+			Filesystem.stat({
+				path: src,
+			})
+				.then((srcStat) => {
+					console.log(
+						`"${src}" source dir/file verified successful, checking if source dir/file already exists in "${dest}" destination file/dir`,
 					);
-				},
-				reject,
-			);
+					// Check if file/folder already exists at the destination
+					Filesystem.stat({
+						path: `${dest}/${srcStat.name}`,
+					})
+						.then(() => {
+							// File already exists error.
+							reject({
+								code: 12,
+							});
+						})
+						.catch((fileExistsErr) => {
+							console.error(
+								"Failed to verify source in destination, error: ",
+								error,
+							);
+							// if we get a "not found" error (code 1), that's good - we can copy
+							if (fileExistsErr.code === 1) {
+								resolve({
+									src: { path: src },
+									dest: { path: dest },
+								});
+							} else {
+								reject(fileExistsErr);
+							}
+						});
+				})
+				.catch((error) => {
+					console.error(
+						`Failed to verify "${src}" source dir/file, error: `,
+						error,
+					);
+					reject(error);
+				});
 		});
 	},
 
@@ -342,16 +363,22 @@ const internalFs = {
 	exists(url) {
 		return new Promise((resolve, reject) => {
 			reject = setMessage(reject);
-			window.resolveLocalFileSystemURL(
-				url,
-				(entry) => {
+			Filesystem.stat({
+				path: url,
+			})
+				.then((stats) => {
+					if (!stats.uri) return resolve(false);
+					console.log(
+						`Successfully found (name: ${stats.name || "name not found"}) "${url}" existing`,
+					);
 					resolve(true);
-				},
-				(err) => {
+				})
+				.catch((err) => {
+					// "not found" error.
 					if (err.code === 1) resolve(false);
+
 					reject(err);
-				},
-			);
+				});
 		});
 	},
 
