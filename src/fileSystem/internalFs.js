@@ -55,7 +55,7 @@ const internalFs = {
 	 * @param {boolean} exclusive If true, and the create option is also true,
 	 * the file must not exist prior to issuing the call.
 	 * Instead, it must be possible for it to be created newly at call time. The default is true.
-	 * @returns {Promise}
+	 * @returns {Promise<string>} URL where the file was written into.
 	 */
 	writeFile(filename, data, create = false, exclusive = true) {
 		exclusive = create ? exclusive : false;
@@ -64,24 +64,20 @@ const internalFs = {
 
 		return new Promise((resolve, reject) => {
 			reject = setMessage(reject);
-			window.resolveLocalFileSystemURL(
-				dirname,
-				(entry) => {
-					entry.getFile(
-						name,
-						{ create, exclusive },
-						(fileEntry) => {
-							fileEntry.createWriter((file) => {
-								file.onwriteend = (res) => resolve(filename);
-								file.onerror = (err) => reject(err.target.error);
-								file.write(data);
-							});
-						},
-						reject,
+			Filesystem.writeFile({
+				path: filename,
+				data: data,
+				encoding: Encoding.UTF8,
+				recursive: create,
+			})
+				.then((file) => resolve(file.uri))
+				.catch((error) => {
+					console.error(
+						`Failed to write into ${filename} file, error: `,
+						error,
 					);
-				},
-				reject,
-			);
+					reject(error);
+				});
 		});
 	},
 
