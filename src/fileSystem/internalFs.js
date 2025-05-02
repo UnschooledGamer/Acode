@@ -60,7 +60,6 @@ const internalFs = {
 	writeFile(filename, data, create = false, exclusive = true) {
 		exclusive = create ? exclusive : false;
 		const name = filename.split("/").pop();
-		const dirname = Url.dirname(filename);
 
 		return new Promise((resolve, reject) => {
 			reject = setMessage(reject);
@@ -70,10 +69,15 @@ const internalFs = {
 				encoding: Encoding.UTF8,
 				recursive: create,
 			})
-				.then((file) => resolve(file.uri))
+				.then((file) => {
+					console.log(
+						`Successfully written into (name: ${name}) ${filename} file`,
+					);
+					resolve(file.uri);
+				})
 				.catch((error) => {
 					console.error(
-						`Failed to write into ${filename} file, error: `,
+						`Failed to write into (name: ${name}) ${filename} file, error: `,
 						error,
 					);
 					reject(error);
@@ -298,7 +302,6 @@ const internalFs = {
 	},
 
 	/**
-	 * TODO: check this function with Rohit.
 	 * Verify if a file or directory exists
 	 * @param {string} src
 	 * @param {string} dest
@@ -370,10 +373,9 @@ const internalFs = {
 					resolve(true);
 				})
 				.catch((err) => {
-					// "not found" error.
-					if (err.code === 1) resolve(false);
-
-					reject(err);
+					// on-error defaulting to false,
+					// as capacitor doesn't emit error codes, for error types(file not found, etc)
+					resolve(false);
 				});
 		});
 	},
