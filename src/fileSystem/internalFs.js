@@ -123,33 +123,18 @@ const internalFs = {
 	readFile(filename) {
 		return new Promise((resolve, reject) => {
 			reject = setMessage(reject);
-			window.resolveLocalFileSystemURL(
-				filename,
-				(fileEntry) => {
-					(async () => {
-						const url = fileEntry.toInternalURL();
-						try {
-							const data = await ajax({
-								url: url,
-								responseType: "arraybuffer",
-							});
-
-							resolve({ data });
-						} catch (error) {
-							fileEntry.file((file) => {
-								const fileReader = new FileReader();
-								fileReader.onerror = reject;
-								fileReader.readAsArrayBuffer(file);
-								fileReader.onloadend = () => {
-									resolve({ data: fileReader.result });
-								};
-							}, reject);
-						}
-					})();
-				},
-				reject,
-			);
-		});
+			Filesystem.readFile({ path: filename }).then((readFileResult) => {
+			    const fileReader = new fileReader()
+			    fileReader.onerror = reject;
+			    fileReader.readAsArrayBuffer(readFileResult.data)
+			    fileReader.onloadend = () => {
+			      console.log(`Successfully Read File contents for "${filename}" file.`)
+			      resolve({ data: fileReader.result })
+			    }
+			}).catch((error) => {
+			  console.error(`Failed to Read File contents of "${filename}", error: `, error)
+			  reject(error)
+			})
 	},
 
 	/**
@@ -245,14 +230,29 @@ const internalFs = {
 			reject = setMessage(reject);
 			this.verify(src, dest)
 				.then((res) => {
-					const { src, dest } = res;
-
-					src[action](
-						dest,
-						undefined,
-						(entry) => resolve(decodeURIComponent(entry.nativeURL)),
-						reject,
-					);
+					if(action === "copyTO") {
+					  Filesystem.copy({ 
+					    from: src,
+					    to: dest
+					  }).then((copyResult) => {
+					      console.log(`Successfully copied from "${src}" to "${dest}"`)
+					      resolve(copyResult.uri)
+					  }).catch((error) => {
+					      console.error(`Failed to copy from "${src}" to "${dest}"`)
+					      reject(error)
+					  })
+					} else if(action === "moveTO") {
+					  Filesystem.rename({
+					    from: src,
+					    to: dest
+					  }).then((moveResult) => {
+					    console.log(`Successfully moved from "${src}" to "${dest}"`)
+					    resolve(dest)
+					  }).catch((error) => {
+					    console.error(`Failed to move from "${src}" to "${dest}"`)
+					    reject(error)
+					  })
+					}
 				})
 				.catch(reject);
 		});
