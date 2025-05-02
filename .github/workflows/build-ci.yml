@@ -1,0 +1,67 @@
+name: Build and Upload APK
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Step 1: Checkout the repository
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    # Step 2: Set up Java
+    - name: Set up Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'zulu'
+        java-version: '21'
+
+    # Step 3: Set up Node.js LTS
+    - name: Set up Node.js LTS
+      uses: actions/setup-node@v3
+      with:
+        node-version: 'lts/*'
+        cache: 'npm'
+    - run: npm i && npm run sync && mkdir -p www/css/build && mkdir -p www/js/build
+    # Step 4: Cache Gradle dependencies
+    - name: Cache Gradle dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.gradle/caches
+        key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          gradle-${{ runner.os }}-
+
+    # Step 5: Set up Gradle
+    - name: Set up Gradle
+      uses: gradle/actions/setup-gradle@v4
+
+    # Step 6: Set up Android SDK
+    - name: Set up Android SDK
+      uses: android-actions/setup-android@v3
+      with:
+        cmdline-tools-version: 13114758
+
+    # Step 7: Cache Android SDK components
+    - name: Cache Android SDK components
+      uses: actions/cache@v3
+      with:
+        path: ~/.android
+        key: android-sdk-${{ runner.os }}-${{ hashFiles('**/build.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          android-sdk-${{ runner.os }}-
+
+    # Step 8: Build the project
+    - name: Build APK
+      run: npm run build paid dev
+
+    # Step 9: Find and upload APK as an artifact
+    - name: Upload APK artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: apk-artifact
+        path: '**/*.apk' # This finds all APK files in the repository
