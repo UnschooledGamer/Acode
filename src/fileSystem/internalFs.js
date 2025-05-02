@@ -135,6 +135,7 @@ const internalFs = {
 			  console.error(`Failed to Read File contents of "${filename}", error: `, error)
 			  reject(error)
 			})
+	  })
 	},
 
 	/**
