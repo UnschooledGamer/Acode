@@ -302,6 +302,7 @@ const internalFs = {
 	},
 
 	/**
+	 * TODO: check this function with Rohit.
 	 * Verify if a file or directory exists
 	 * @param {string} src
 	 * @param {string} dest
