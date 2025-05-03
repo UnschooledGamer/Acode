@@ -124,7 +124,7 @@ const internalFs = {
 		return new Promise((resolve, reject) => {
 			reject = setMessage(reject);
 			Filesystem.readFile({ path: filename }).then((readFileResult) => {
-			    const fileReader = new fileReader()
+			    const fileReader = new FileReader()
 			    fileReader.onerror = reject;
 			    fileReader.readAsArrayBuffer(readFileResult.data)
 			    fileReader.onloadend = () => {
