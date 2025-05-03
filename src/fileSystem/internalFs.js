@@ -123,7 +123,7 @@ const internalFs = {
 	readFile(filename) {
 		return new Promise((resolve, reject) => {
 			reject = setMessage(reject);
-			Filesystem.readFile({ path: filename }).then((readFileResult) => {
+			Filesystem.readFile({ path: filename, encoding: Encoding.UTF8 }).then((readFileResult) => {
 			    const fileReader = new FileReader()
 			    fileReader.onerror = reject;
 			    fileReader.readAsArrayBuffer(readFileResult.data)
