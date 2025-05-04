@@ -58,11 +58,23 @@ const internalFs = {
 	 * Instead, it must be possible for it to be created newly at call time. The default is true.
 	 * @returns {Promise<string>} URL where the file was written into.
 	 */
-	writeFile(filename, data, create = false, exclusive = true) {
+	writeFile(filename, udata, create = false, exclusive = true) {
 		exclusive = create ? exclusive : false;
 		const name = filename.split("/").pop();
 
 		return new Promise((resolve, reject) => {
+			if(udata === undefined || udata == null){
+				reject("udata is null")
+			}
+
+			let data
+			if (udata instanceof ArrayBuffer || Object.prototype.toString.call(udata) === "[object ArrayBuffer]") {
+				const decoder = new TextDecoder('utf-8');
+				data = decoder.decode(udata);
+			}else{
+				data = udata
+			}
+
 			reject = setMessage(reject);
 			Filesystem.writeFile({
 				path: filename,
@@ -93,8 +105,11 @@ const internalFs = {
 	 */
 
 	delete(filename) {
+		console.log("deletion skipped")
+		return
 		return new Promise((resolve, reject) => {
 			console.log("Deleting " + filename);
+			
 
 			Filesystem.stat({ path: filename })
 				.then((stats) => {
@@ -126,7 +141,6 @@ const internalFs = {
 			reject = setMessage(reject);
 			Filesystem.readFile({ path: filename, encoding: Encoding.UTF8 })
 				.then((readFileResult) => {
-
 					const encoder = new TextEncoder();
 					const buffer = encoder.encode(readFileResult.data).buffer;
 					
@@ -141,6 +155,24 @@ const internalFs = {
 				});
 		});
 	},
+
+	readStringFile(filename) {
+		return new Promise((resolve, reject) => {
+			reject = setMessage(reject);
+			Filesystem.readFile({ path: filename, encoding: Encoding.UTF8 })
+				.then((readFileResult) => {
+					resolve({data : readFileResult.data})
+				})
+				.catch((error) => {
+					console.error(
+						`Failed to Read File contents of "${filename}", error: `,
+						error,
+					);
+					reject(error);
+				});
+		});
+	},
+
 
 	/**
 	 * Rename a file or directory
@@ -182,14 +214,14 @@ const internalFs = {
 			reject = setMessage(reject);
 			// TODO!: ask about `recursive` option
 			Filesystem.mkdir({
-				path: `${path}${dirname}`,
-				recursive: false,
+				path: `${path}/${dirname}`,
+				recursive: true,
 			})
 				.then(() => {
 					console.log(
-						`Created "${dirname}" Directory successfully on path: ${path}`,
+						`Created  ${path}/${dirname}`,
 					);
-					Filesystem.stat({ path: `${path}${dirname}` })
+					Filesystem.stat({ path: `${path}/${dirname}` })
 						.then((stats) => resolve(stats.url))
 						.catch(reject);
 				})
@@ -475,6 +507,7 @@ function createFs(url) {
 			return files;
 		},
 		async readFile(encoding) {
+			console.log("fs read "+url)
 			let { data } = await internalFs.readFile(url, encoding);
 
 			if (encoding) {
