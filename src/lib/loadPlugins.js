@@ -52,7 +52,7 @@ export default async function loadPlugins(loadOnlyTheme = false) {
 
 	// Load plugins concurrently
 	const loadPromises = pluginsToLoad.map(async (pluginDir) => {
-		console.log("loading")
+		console.log("loading");
 		const pluginId = Url.basename(pluginDir.url);
 
 		if (loadOnlyTheme && currentTheme) {
@@ -99,7 +99,7 @@ function isThemePlugin(pluginId) {
 
 async function cleanupFailedPlugins(pluginIds) {
 	for (const pluginId of pluginIds) {
-		console.log("skiping delete "+pluginId)
+		console.log("skipping delete " + pluginId);
 		continue;
 		try {
 			const pluginDir = Url.join(PLUGIN_DIR, pluginId);

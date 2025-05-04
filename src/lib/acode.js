@@ -189,7 +189,7 @@ export default class Acode {
 
 							let purchaseToken;
 							let product;
-							const pluginUrl = `${PLUGIN_DIR}/${pluginId}`
+							const pluginUrl = `${PLUGIN_DIR}/${pluginId}`;
 							fsOperation(`${pluginUrl}/plugin.json`)
 								.readFile()
 								.catch(() => {

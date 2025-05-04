@@ -1,14 +1,14 @@
 import Page from "components/page";
 import fsOperation from "fileSystem";
+import internalFs from "fileSystem/internalFs";
 import Url from "utils/Url";
 import helpers from "utils/helpers";
 import actionStack from "./actionStack";
-import internalFs from "fileSystem/internalFs";
 
 export default async function loadPlugin(pluginId, justInstalled = false) {
-	const baseUrl = Url.join(PLUGIN_DIR, pluginId)
+	const baseUrl = Url.join(PLUGIN_DIR, pluginId);
 
-	console.log("Base url "+baseUrl)
+	console.log("Base url " + baseUrl);
 
 	const cacheFile = Url.join(CACHE_STORAGE, pluginId);
 
@@ -26,16 +26,14 @@ export default async function loadPlugin(pluginId, justInstalled = false) {
 	}
 
 	return new Promise((resolve, reject) => {
-
-		if(pluginId === undefined){
-			console.error("Skiping loading plugin with undefined id")
-			reject("Skiping loading plugin with undefined id")
-			return
+		if (pluginId === undefined) {
+			console.error("Skipping loading plugin with undefined id");
+			reject("Skipping loading plugin with undefined id");
+			return;
 		}
 
-		
-		const data = internalFs.readStringFile(mainUrl).data
-	
+		const data = internalFs.readStringFile(mainUrl).data;
+
 		const $script = <script dangerouslySetInnerHTML={{ __html: data }} />;
 
 		$script.onerror = (error) => {

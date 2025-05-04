@@ -63,16 +63,19 @@ const internalFs = {
 		const name = filename.split("/").pop();
 
 		return new Promise((resolve, reject) => {
-			if(udata === undefined || udata == null){
-				reject("udata is null")
+			if (udata === undefined || udata == null) {
+				reject("udata is null");
 			}
 
-			let data
-			if (udata instanceof ArrayBuffer || Object.prototype.toString.call(udata) === "[object ArrayBuffer]") {
-				const decoder = new TextDecoder('utf-8');
+			let data;
+			if (
+				udata instanceof ArrayBuffer ||
+				Object.prototype.toString.call(udata) === "[object ArrayBuffer]"
+			) {
+				const decoder = new TextDecoder("utf-8");
 				data = decoder.decode(udata);
-			}else{
-				data = udata
+			} else {
+				data = udata;
 			}
 
 			reject = setMessage(reject);
@@ -105,11 +108,10 @@ const internalFs = {
 	 */
 
 	delete(filename) {
-		console.log("deletion skipped")
-		return
+		console.log("deletion skipped");
+		return;
 		return new Promise((resolve, reject) => {
 			console.log("Deleting " + filename);
-			
 
 			Filesystem.stat({ path: filename })
 				.then((stats) => {
@@ -143,8 +145,8 @@ const internalFs = {
 				.then((readFileResult) => {
 					const encoder = new TextEncoder();
 					const buffer = encoder.encode(readFileResult.data).buffer;
-					
-					resolve({data : buffer})
+
+					resolve({ data: buffer });
 				})
 				.catch((error) => {
 					console.error(
@@ -161,7 +163,7 @@ const internalFs = {
 			reject = setMessage(reject);
 			Filesystem.readFile({ path: filename, encoding: Encoding.UTF8 })
 				.then((readFileResult) => {
-					resolve({data : readFileResult.data})
+					resolve({ data: readFileResult.data });
 				})
 				.catch((error) => {
 					console.error(
@@ -172,7 +174,6 @@ const internalFs = {
 				});
 		});
 	},
-
 
 	/**
 	 * Rename a file or directory
@@ -218,9 +219,7 @@ const internalFs = {
 				recursive: true,
 			})
 				.then(() => {
-					console.log(
-						`Created  ${path}/${dirname}`,
-					);
+					console.log(`Created  ${path}/${dirname}`);
 					Filesystem.stat({ path: `${path}/${dirname}` })
 						.then((stats) => resolve(stats.url))
 						.catch(reject);
@@ -507,7 +506,7 @@ function createFs(url) {
 			return files;
 		},
 		async readFile(encoding) {
-			console.log("fs read "+url)
+			console.log("fs read " + url);
 			let { data } = await internalFs.readFile(url, encoding);
 
 			if (encoding) {

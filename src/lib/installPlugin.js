@@ -29,7 +29,7 @@ export default async function installPlugin(
 	purchaseToken,
 	isDependency,
 ) {
-	console.log(`Installing ${name}`)
+	console.log(`Installing ${name}`);
 	if (!isDependency) {
 		loaderDialog = loader.create(name || "Plugin", strings.installing, {
 			timeout: 6000,
@@ -49,7 +49,7 @@ export default async function installPlugin(
 		window.log("error", error);
 	}
 
-	console.log("installing -------------------------")
+	console.log("installing -------------------------");
 	if (!/^(https?|file|content):/.test(id)) {
 		pluginUrl = Url.join(
 			constants.API_BASE,
