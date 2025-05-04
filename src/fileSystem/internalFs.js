@@ -1,5 +1,6 @@
 import { Directory, Encoding, Filesystem } from "@capacitor/filesystem";
 import ajax from "@deadlyjack/ajax";
+import { data } from "autoprefixer";
 import fsOperation from "fileSystem";
 import path from "path-browserify";
 import Url from "utils/Url";
@@ -125,15 +126,11 @@ const internalFs = {
 			reject = setMessage(reject);
 			Filesystem.readFile({ path: filename, encoding: Encoding.UTF8 })
 				.then((readFileResult) => {
-					const fileReader = new FileReader();
-					fileReader.onerror = reject;
-					fileReader.readAsArrayBuffer(readFileResult.data);
-					fileReader.onloadend = () => {
-						console.log(
-							`Successfully Read File contents for "${filename}" file.`,
-						);
-						resolve({ data: fileReader.result });
-					};
+
+					const encoder = new TextEncoder();
+					const buffer = encoder.encode(readFileResult.data).buffer;
+					
+					resolve({data : buffer})
 				})
 				.catch((error) => {
 					console.error(
