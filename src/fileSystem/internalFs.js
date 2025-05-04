@@ -1,5 +1,6 @@
 import { Directory, Encoding, Filesystem } from "@capacitor/filesystem";
 import ajax from "@deadlyjack/ajax";
+import { data } from "autoprefixer";
 import fsOperation from "fileSystem";
 import path from "path-browserify";
 import Url from "utils/Url";
@@ -15,7 +16,6 @@ const internalFs = {
 	listDir(url) {
 		return new Promise((resolve, reject) => {
 			reject = setMessage(reject);
-
 			Filesystem.readdir({ path: url })
 				.then((result) => {
 					console.log(
@@ -123,32 +123,21 @@ const internalFs = {
 	readFile(filename) {
 		return new Promise((resolve, reject) => {
 			reject = setMessage(reject);
-			window.resolveLocalFileSystemURL(
-				filename,
-				(fileEntry) => {
-					(async () => {
-						const url = fileEntry.toInternalURL();
-						try {
-							const data = await ajax({
-								url: url,
-								responseType: "arraybuffer",
-							});
+			Filesystem.readFile({ path: filename, encoding: Encoding.UTF8 })
+				.then((readFileResult) => {
 
-							resolve({ data });
-						} catch (error) {
-							fileEntry.file((file) => {
-								const fileReader = new FileReader();
-								fileReader.onerror = reject;
-								fileReader.readAsArrayBuffer(file);
-								fileReader.onloadend = () => {
-									resolve({ data: fileReader.result });
-								};
-							}, reject);
-						}
-					})();
-				},
-				reject,
-			);
+					const encoder = new TextEncoder();
+					const buffer = encoder.encode(readFileResult.data).buffer;
+
+					resolve({ data: buffer })
+				})
+				.catch((error) => {
+					console.error(
+						`Failed to Read File contents of "${filename}", error: `,
+						error,
+					);
+					reject(error);
+				});
 		});
 	},
 
@@ -245,14 +234,33 @@ const internalFs = {
 			reject = setMessage(reject);
 			this.verify(src, dest)
 				.then((res) => {
-					const { src, dest } = res;
-
-					src[action](
-						dest,
-						undefined,
-						(entry) => resolve(decodeURIComponent(entry.nativeURL)),
-						reject,
-					);
+					if (action === "copyTO") {
+						Filesystem.copy({
+							from: src,
+							to: dest,
+						})
+							.then((copyResult) => {
+								console.log(`Successfully copied from "${src}" to "${dest}"`);
+								resolve(copyResult.uri);
+							})
+							.catch((error) => {
+								console.error(`Failed to copy from "${src}" to "${dest}"`);
+								reject(error);
+							});
+					} else if (action === "moveTO") {
+						Filesystem.rename({
+							from: src,
+							to: dest,
+						})
+							.then((moveResult) => {
+								console.log(`Successfully moved from "${src}" to "${dest}"`);
+								resolve(dest);
+							})
+							.catch((error) => {
+								console.error(`Failed to move from "${src}" to "${dest}"`);
+								reject(error);
+							});
+					}
 				})
 				.catch(reject);
 		});
@@ -278,10 +286,10 @@ const internalFs = {
 							helpers.defineDeprecatedProperty(
 								stats,
 								"uri",
-								function () {
+								function() {
 									return this.url;
 								},
-								function (val) {
+								function(val) {
 									this.url = val;
 								},
 							);
@@ -395,7 +403,7 @@ const internalFs = {
 };
 
 function setMessage(reject) {
-	return function (err) {
+	return function(err) {
 		if (err.code) {
 			const message = getErrorMessage(err.code);
 			err.message = message;
