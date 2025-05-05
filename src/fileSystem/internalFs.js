@@ -66,24 +66,30 @@ const internalFs = {
 				reject("udata is null");
 			}
 
-			let data;
+			let options = {
+				path: filename,
+				recursive: create,
+			};
+
+			reject = setMessage(reject);
+
 			if (
 				udata instanceof ArrayBuffer ||
 				Object.prototype.toString.call(udata) === "[object ArrayBuffer]"
 			) {
-				const decoder = new TextDecoder("utf-8");
-				data = decoder.decode(udata);
+				// Binary data — store as base64
+				options.data = btoa(String.fromCharCode(...new Uint8Array(udata)));
+				options.encoding = Encoding.BASE64;
+			} else if (typeof udata === "string") {
+				// Text data — store as UTF-8
+				options.data = udata;
+				options.encoding = Encoding.UTF8;
 			} else {
-				data = udata;
+				reject("Unsupported udata type");
+				return;
 			}
 
-			reject = setMessage(reject);
-			Filesystem.writeFile({
-				path: filename,
-				data: data,
-				encoding: Encoding.UTF8,
-				recursive: create,
-			})
+			Filesystem.writeFile(options)
 				.then((file) => {
 					console.log(
 						`Successfully written into (name: ${name}) ${filename} file`,
