@@ -1,9 +1,9 @@
 package com.foxdebug.acode.plugins
 
 import android.content.Intent
-import android.net.Uri
 import android.os.Build
 import androidx.appcompat.app.AlertDialog
+import androidx.core.net.toUri
 import com.foxdebug.acode.Acode
 import com.foxdebug.acode.runOnUiThread
 import com.getcapacitor.JSObject
@@ -15,11 +15,12 @@ import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.plus
-import androidx.core.net.toUri
 
 @CapacitorPlugin(name = "NativeLayer")
 class NativeLayer : Plugin() {
     val scope = MainScope() + CoroutineName("NativeLayer")
+
+    private val nativeFs = AcodeNativeFs(context)
 
     override fun handleOnDestroy() {
         super.handleOnDestroy()
@@ -195,5 +196,22 @@ class NativeLayer : Plugin() {
                 }
             }
         }
+    }
+
+    @PluginMethod
+    fun isSymlink(call: PluginCall) {
+        val uri = call.getString("uri") ?: run {
+            call.reject("Missing 'uri'")
+            return
+        }
+
+        val isSymlink = try {
+            nativeFs.isSymlink(uri)
+        } catch (e: Exception) {
+            // call.reject("Failed to check if URI is a symlink: ${e.message}")
+            false
+        }
+
+        call.resolve(JSObject().put("isSymlink", isSymlink))
     }
 }
