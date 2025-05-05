@@ -20,28 +20,20 @@ const internalFs = {
 						`Listed files/directories successfully for url: ${url}, Result: `,
 						result,
 					);
-					Capacitor.Plugins.NativeLayer.isSymlink({ uri: file.uri })
-						.then((isSymlink) => {
-							resolve(
-								result.files.map((file) => ({
-									name: file.name,
-									url: file.uri,
-									size: file.size,
-									ctime: file.ctime,
-									mtime: file.mtime,
-									isFile: file.type === "file",
-									isDirectory: file.type === "directory",
-									// TODO: Link(symlink/hardlink) file detection if possible.
-									isLink: isSymlink,
-								})),
-							);
-						})
-						.catch((error) => {
-							console.log(
-								`Error while checking symlink status for file: ${file.uri}, error:`,
-								error,
-							);
-						});
+					resolve(
+						result.files.map((file) => ({
+							name: file.name,
+							url: file.uri,
+							size: file.size,
+							ctime: file.ctime,
+							mtime: file.mtime,
+							isFile: file.type === "file",
+							isDirectory: file.type === "directory",
+							// TODO: Link(symlink/hardlink) file detection if possible.
+              //This function sometimes gets called even before the NativeLayer is registred so calling isSymlink is not possible
+							isLink: false,
+						})),
+					);
 				})
 				.catch((error) => {
 					console.log(
