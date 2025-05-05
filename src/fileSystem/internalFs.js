@@ -32,8 +32,6 @@ const internalFs = {
 							mtime: file.mtime,
 							isFile: file.type === "file",
 							isDirectory: file.type === "directory",
-							// TODO: Link(symlink/hardlink) file detection if possible.
-              //This function sometimes gets called even before the NativeLayer is registred so calling isSymlink is not possible
 							isLink: false,
 						})),
 					);
