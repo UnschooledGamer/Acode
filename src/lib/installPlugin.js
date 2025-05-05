@@ -3,6 +3,7 @@ import alert from "dialogs/alert";
 import confirm from "dialogs/confirm";
 import loader from "dialogs/loader";
 import fsOperation from "fileSystem";
+import internalFs from "fileSystem/internalFs";
 import purchaseListener from "handlers/purchase";
 import JSZip from "jszip";
 import Url from "utils/Url";
@@ -42,8 +43,8 @@ export default async function installPlugin(
 	let state;
 
 	try {
-		if (!(await fsOperation(PLUGIN_DIR).exists())) {
-			await fsOperation(DATA_STORAGE).createDirectory("plugins");
+		if (!(await internalFs.exists(PLUGIN_DIR))) {
+			await internalFs.createDir(DATA_STORAGE, "plugins");
 		}
 	} catch (error) {
 		window.log("error", error);
@@ -181,11 +182,9 @@ export default async function installPlugin(
 			state = await InstallState.new(id);
 			console.log("Install state end");
 
-			if (!(await fsOperation(pluginDir).exists())) {
-				await fsOperation(PLUGIN_DIR).createDirectory(id);
+			if (!(await internalFs.exists(pluginDir))) {
+				await internalFs.createDir(PLUGIN_DIR, id);
 			}
-
-			console.log(zip);
 
 			const promises = Object.keys(zip.files).map(async (file) => {
 				try {
