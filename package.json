@@ -6,6 +6,7 @@
   "scripts": {
     "lang": "node ./utils/lang.js",
     "build": "biome check --write && biome lint --write &&  node scripts/build.js",
+    "launch":"biome check --write && biome lint --write &&  node scripts/build.js && adb install android/app/build/outputs/apk/paid/debug/app-paid-debug.apk && adb shell am start -n com.foxdebug.acode/.MainActivity",
     "clean": "sh scripts/gradlew-link clean && rm -rf www/js/build && rm -rf www/css/build",
     "plugin": "sh utils/scripts/plugin.sh",
     "setup": "npx cap sync",

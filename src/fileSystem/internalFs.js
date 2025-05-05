@@ -114,8 +114,6 @@ const internalFs = {
 	 */
 
 	delete(filename) {
-		console.log("deletion skipped");
-		return;
 		return new Promise((resolve, reject) => {
 			console.log("Deleting " + filename);
 

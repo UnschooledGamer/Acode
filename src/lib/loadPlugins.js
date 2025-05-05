@@ -99,8 +99,6 @@ function isThemePlugin(pluginId) {
 
 async function cleanupFailedPlugins(pluginIds) {
 	for (const pluginId of pluginIds) {
-		console.log("skipping delete " + pluginId);
-		continue;
 		try {
 			const pluginDir = Url.join(PLUGIN_DIR, pluginId);
 			if (await fsOperation(pluginDir).exists()) {

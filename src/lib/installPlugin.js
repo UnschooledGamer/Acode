@@ -65,6 +65,8 @@ export default async function installPlugin(
 		pluginUrl = id;
 	}
 
+	console.log(`Plugin Url ${pluginUrl}`);
+
 	try {
 		if (!isDependency) loaderDialog.show();
 
