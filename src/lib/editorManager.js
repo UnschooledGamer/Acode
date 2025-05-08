@@ -646,14 +646,6 @@ async function EditorManager($header, $body) {
 
 		manager.activeFile = file;
 
-		if (file.hideQuickTools) {
-			root.classList.add("hide-floating-button");
-			actions("set-height", { height: 0, save: false });
-		} else {
-			root.classList.remove("hide-floating-button");
-			actions("set-height", appSettings.value.quickTools);
-		}
-
 		if (file.type === "editor") {
 			editor.setSession(file.session);
 			editor.setReadOnly(!file.editable || !!file.loading);
@@ -677,6 +669,15 @@ async function EditorManager($header, $body) {
 			if (manager.activeFile && manager.activeFile.type === "editor") {
 				manager.activeFile.session.selection.clearSelection();
 			}
+		}
+
+		if (file?.hideQuickTools) {
+			root.classList.add("hide-floating-button");
+			actions("set-height", { height: 0, save: false });
+		} else {
+			root.classList.remove("hide-floating-button");
+			const quickToolsHeight = appSettings.value.quickTools || 1;
+			actions("set-height", { height: quickToolsHeight, save: true });
 		}
 
 		$header.text = file.filename;
