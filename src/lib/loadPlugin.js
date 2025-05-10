@@ -98,8 +98,6 @@ export default async function loadPlugin(pluginId, justInstalled = false) {
 			}
 		};
 
-		console.log("on load registred");
-
 		console.log("attaching script");
 		document.head.append($script);
 		console.log("script attached");
