@@ -40,8 +40,6 @@ export default async function loadPlugin(pluginId, justInstalled = false) {
 
 		const data = result.data;
 
-		console.log(`data ${data}`);
-
 		const blob = new Blob([data], { type: "text/javascript" });
 		const url = URL.createObjectURL(blob);
 

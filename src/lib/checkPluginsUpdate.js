@@ -1,4 +1,5 @@
 import ajax from "@deadlyjack/ajax";
+import internalFs from "fileSystem/internalFs";
 import fsOperation from "../fileSystem";
 import Url from "../utils/Url";
 
@@ -10,16 +11,20 @@ export default async function checkPluginsUpdate() {
 	plugins.forEach((pluginDir) => {
 		promises.push(
 			(async () => {
-				const plugin = await fsOperation(
-					Url.join(pluginDir.url, "plugin.json"),
-				).readFile("json");
+				try {
+					const plugin = await fsOperation(
+						Url.join(pluginDir.url, "plugin.json"),
+					).readFile("json");
 
-				const res = await ajax({
-					url: `https://acode.app/api/plugin/check-update/${plugin.id}/${plugin.version}`,
-				});
+					const res = await ajax({
+						url: `https://acode.app/api/plugin/check-update/${plugin.id}/${plugin.version}`,
+					});
 
-				if (res.update) {
-					updates.push(plugin.id);
+					if (res && res.update === true) {
+						updates.push(plugin.id);
+					}
+				} catch (e) {
+					console.warn(e);
 				}
 			})(),
 		);

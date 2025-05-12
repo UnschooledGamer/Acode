@@ -113,11 +113,11 @@ const internalFs = {
 	 */
 
 	delete(filename) {
-		return new Promise((resolve, reject) => {
+		return new Promise(async (resolve, reject) => {
 			console.log("Deleting " + filename);
 
-			if (!this.exists(filename)) {
-				console.log(`File ${filename} doesnt exists`);
+			if (!(await this.exists(filename))) {
+				console.warn(`File ${filename} doesnt exists`);
 				resolve();
 			} else {
 				Filesystem.stat({ path: filename })
@@ -146,6 +146,7 @@ const internalFs = {
 	 * @param {string} encoding
 	 * @returns {Promise}
 	 */
+
 	readFile(filename) {
 		return new Promise((resolve, reject) => {
 			reject = setMessage(reject);
@@ -159,6 +160,30 @@ const internalFs = {
 				.catch((error) => {
 					console.error(
 						`Failed to Read File contents of "${filename}", error: `,
+						error,
+					);
+					reject(error);
+				});
+		});
+	},
+
+	readFileRaw(filename) {
+		return new Promise((resolve, reject) => {
+			reject = setMessage(reject);
+			Filesystem.readFile({ path: filename, encoding: Encoding.BASE64 })
+				.then((readFileResult) => {
+					const base64 = readFileResult.data;
+					const binary = atob(base64);
+					const bytes = new Uint8Array(binary.length);
+					for (let i = 0; i < binary.length; i++) {
+						bytes[i] = binary.charCodeAt(i);
+					}
+
+					resolve({ data: bytes.buffer });
+				})
+				.catch((error) => {
+					console.error(
+						`Failed to read raw file "${filename}", error: `,
 						error,
 					);
 					reject(error);

@@ -11,6 +11,7 @@ import purchaseListener from "handlers/purchase";
 import constants from "lib/constants";
 import InstallState from "lib/installState";
 import settings from "lib/settings";
+import mimeType from "mime-types";
 import FileBrowser from "pages/fileBrowser";
 import plugin from "pages/plugin";
 import Url from "utils/Url";
@@ -301,6 +302,8 @@ async function loadExplore() {
 	}
 }
 
+const iconUrls = new Map();
+
 async function listInstalledPlugins() {
 	let dirItems;
 
@@ -330,7 +333,23 @@ async function listInstalledPlugins() {
 
 			try {
 				const iconUrl = getLocalRes(id, plugin.icon);
-				plugin.icon = iconUrl;
+				if (iconUrls.has(iconUrl)) {
+					URL.revokeObjectURL(iconUrls.get(iconUrl));
+					iconUrls.delete(iconUrl);
+				}
+
+				if (await internalFs.exists(iconUrl)) {
+					const fileContent = await internalFs.readFileRaw(iconUrl);
+					const ext = Url.extname(iconUrl);
+					const mime = mimeType.lookup(ext);
+					const blob = new Blob([fileContent.data], { type: mime });
+					const url = URL.createObjectURL(blob);
+					plugin.icon = url;
+					iconUrls.set(iconUrl, url);
+				} else {
+					console.error(`File path ${iconUrl} doesnt exists`);
+					plugin.icon = null;
+				}
 			} catch (err) {
 				plugin.icon = null;
 			}
