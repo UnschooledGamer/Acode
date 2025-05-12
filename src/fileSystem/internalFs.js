@@ -116,22 +116,27 @@ const internalFs = {
 		return new Promise((resolve, reject) => {
 			console.log("Deleting " + filename);
 
-			Filesystem.stat({ path: filename })
-				.then((stats) => {
-					if (stats.type === "directory") {
-						return Filesystem.rmdir({ path: filename, recursive: true });
-					} else {
-						return Filesystem.deleteFile({ path: filename });
-					}
-				})
-				.then(() => {
-					console.log("Deleted successfully!");
-					resolve();
-				})
-				.catch((error) => {
-					console.error("Error while deleting:", error);
-					reject(error);
-				});
+			if (!this.exists(filename)) {
+				console.log(`File ${filename} doesnt exists`);
+				resolve();
+			} else {
+				Filesystem.stat({ path: filename })
+					.then((stats) => {
+						if (stats.type === "directory") {
+							return Filesystem.rmdir({ path: filename, recursive: true });
+						} else {
+							return Filesystem.deleteFile({ path: filename });
+						}
+					})
+					.then(() => {
+						console.log("Deleted successfully!");
+						resolve();
+					})
+					.catch((error) => {
+						console.error("Error while deleting:", error);
+						reject(error);
+					});
+			}
 		});
 	},
 
