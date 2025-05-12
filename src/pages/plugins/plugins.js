@@ -14,6 +14,7 @@ import installPlugin from "lib/installPlugin";
 import prompt from "dialogs/prompt";
 import actionStack from "lib/actionStack";
 import Contextmenu from "components/contextmenu";
+import internalFs from "fileSystem/internalFs";
 
 /**
  *
