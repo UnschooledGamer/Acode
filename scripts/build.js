@@ -9,7 +9,7 @@ const isWindows = platform === "win32";
 // Check for supported platforms
 if (
   !["linux", "darwin", "win32"].includes(platform) &&
-  !platform.includes("bsd")
+  !platform.toLowerCase().includes("bsd")
 ) {
   console.error(`Unsupported platform: ${platform}`);
   process.exit(1);
@@ -153,7 +153,7 @@ try {
     isWindows ? "gradlew.bat" : "gradlew",
   );
   if (!isWindows) {
-    fs.chmodSync(gradlewPath, 755);
+    fs.chmodSync(gradlewPath, 0o755);
   }
 
   // Run gradle task
