@@ -61,6 +61,7 @@ async function run(
 	const uuid = helpers.uuid();
 
 	let isLoading = false;
+	let isFallback = false;
 	let filename, pathName, extension;
 	let port = appSettings.value.serverPort;
 	let EXECUTING_SCRIPT = uuid + "_script.js";
@@ -253,7 +254,7 @@ async function run(
 
 			let file = activeFile.SAFMode === "single" ? activeFile : null;
 
-			if (pathName) {
+			if (pathName && isFallback) {
 				const projectFolder = addedFolder[0];
 
 				//set the root folder to the file parent if no project folder is set
