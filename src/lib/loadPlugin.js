@@ -82,13 +82,16 @@ export default async function loadPlugin(pluginId, justInstalled = false) {
 					await fsOperation(CACHE_STORAGE).createFile(pluginId);
 				}
 
-				await acode.initPlugin(pluginId, baseUrl, $page, {
-					cacheFileUrl: await helpers.toInternalUri(cacheFile),
-					cacheFile: fsOperation(cacheFile),
-					firstInit: justInstalled,
-				});
-
-				console.log("done xx");
+				await acode.initPlugin(
+					pluginId,
+					Capacitor.convertFileSrc(baseUrl),
+					$page,
+					{
+						cacheFileUrl: Capacitor.convertFileSrc(cacheFile),
+						cacheFile: fsOperation(cacheFile),
+						firstInit: justInstalled,
+					},
+				);
 
 				resolve();
 			} catch (error) {

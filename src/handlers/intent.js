@@ -10,9 +10,7 @@ const handlers = [];
  * @param {Intent} intent
  */
 export default async function HandleIntent(intent = {}) {
-	const type = intent.action.split(".").slice(-1)[0];
-
-	if (["SEND", "VIEW", "EDIT"].includes(type)) {
+	if (intent !== undefined && intent.action !== undefined && ["SEND", "VIEW", "EDIT"].includes(intent.action.split(".").slice(-1)[0])) {
 		/**@type {string} */
 		const url = intent.fileUri || intent.data;
 		if (!url) return;
