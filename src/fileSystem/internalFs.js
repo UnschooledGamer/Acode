@@ -57,7 +57,8 @@ const internalFs = {
 	 * Instead, it must be possible for it to be created newly at call time. The default is true.
 	 * @returns {Promise<string>} URL where the file was written into.
 	 */
-	writeFile(filename, udata, create = false, exclusive = true) {
+	writeToFile(filename, udata, create = false, exclusive = true) {
+		console.log(Filesystem.writeFile);
 		exclusive = create ? exclusive : false;
 		const name = filename.split("/").pop();
 
@@ -73,20 +74,22 @@ const internalFs = {
 
 			reject = setMessage(reject);
 
-			if (
-				udata instanceof ArrayBuffer ||
-				Object.prototype.toString.call(udata) === "[object ArrayBuffer]"
-			) {
-				// Binary data — store as base64
-				options.data = btoa(String.fromCharCode(...new Uint8Array(udata)));
-				options.encoding = Encoding.BASE64;
-			} else if (typeof udata === "string") {
-				// Text data — store as UTF-8
+			if (typeof udata === "string") {
 				options.data = udata;
 				options.encoding = Encoding.UTF8;
 			} else {
-				reject("Unsupported udata type");
-				return;
+				function arrayBufferToBase64(buffer) {
+					let binary = "";
+					const bytes = new Uint8Array(buffer);
+					const len = bytes.byteLength;
+					for (let i = 0; i < len; i++) {
+						binary += String.fromCharCode(bytes[i]);
+					}
+					return btoa(binary);
+				}
+
+				options.data = arrayBufferToBase64(udata);
+				options.encoding = Encoding.BASE64;
 			}
 
 			Filesystem.writeFile(options)
@@ -199,7 +202,7 @@ const internalFs = {
 					resolve({ data: readFileResult.data });
 				})
 				.catch((error) => {
-					console.error(
+					console.log(
 						`Failed to Read File contents of "${filename}", error: `,
 						error,
 					);
@@ -552,10 +555,15 @@ function createFs(url) {
 			if (typeof content === "string" && encoding) {
 				content = await encode(content, encoding);
 			}
-			return internalFs.writeFile(url, content, false, false);
+			return internalFs.writeToFile(url, content, false, false);
 		},
 		createFile(name, data) {
-			return internalFs.writeFile(Url.join(url, name), data || "", true, true);
+			return internalFs.writeToFile(
+				Url.join(url, name),
+				data || "",
+				true,
+				true,
+			);
 		},
 		createDirectory(name) {
 			return internalFs.createDir(url, name);
