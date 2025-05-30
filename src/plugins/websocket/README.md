@@ -11,7 +11,6 @@ It aims to mimic the [WebSocket API](https://developer.mozilla.org/en-US/docs/We
 * ✅ Support for protocols
 * ✅ Compatible with Cordova for Android
 
-
 ---
 
 ## Usage
@@ -19,7 +18,7 @@ It aims to mimic the [WebSocket API](https://developer.mozilla.org/en-US/docs/We
 ### Import
 
 ```javascript
-const WebSocketPlugin = cordova.plugins.websocket;
+const WebSocketPlugin = cordova.websocket;
 ```
 
 ### Connect to WebSocket
