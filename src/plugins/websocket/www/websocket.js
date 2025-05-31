@@ -34,9 +34,15 @@ class WebSocketInstance {
         }
     }
 
-    close() {
+    /**
+     * Closes the WebSocket connection.
+     *
+     * @param {number} code The status code explaining why the connection is being closed.
+     * @param {string} reason A human-readable string explaining why the connection is being closed.
+     */
+    close(code, reason) {
         this.readyState = WebSocketInstance.CLOSING;
-        exec(null, null, "WebSocketPlugin", "close", [this.instanceId]);
+        exec(null, null, "WebSocketPlugin", "close", [this.instanceId, code, reason]);
     }
 }
 
@@ -45,10 +51,39 @@ WebSocketInstance.OPEN = 1;
 WebSocketInstance.CLOSING = 2;
 WebSocketInstance.CLOSED = 3;
 
-const connect = function(url, protocols = null) {
+const connect = function(url, protocols = null, headers = null) {
     return new Promise((resolve, reject) => {
-        exec(instanceId => resolve(new WebSocketInstance(url, instanceId)), reject, "WebSocketPlugin", "connect", [url, protocols]);
+        exec(instanceId => resolve(new WebSocketInstance(url, instanceId)), reject, "WebSocketPlugin", "connect", [url, protocols, headers]);
     });
 };
 
-module.exports = { connect };
+const listClients = function() {
+    return new Promise((resolve, reject) => {
+        exec(resolve, reject, "WebSocketPlugin", "listClients", []);
+    });
+};
+
+/** Utility functions, in-case you lost the websocketInstance returned from the connect function */
+
+const send = function(instanceId, message) {
+    return new Promise((resolve, reject) => {
+        exec(resolve, reject, "WebSocketPlugin", "send", [instanceId, message]);
+    });
+};
+
+/**
+ * Closes the WebSocket connection.
+ *
+ * @param {string} instanceId The ID of the WebSocketInstance to close.
+ * @param {number} [code] (optional) The status code explaining why the connection is being closed.
+ * @param {string} [reason] (optional) A human-readable string explaining why the connection is being closed.
+ *
+ * @returns {Promise} A promise that resolves when the close operation has completed.
+ */
+const close = function(instanceId, code, reason) {
+    return new Promise((resolve, reject) => {
+        exec(resolve, reject, "WebSocketPlugin", "close", [instanceId, code, reason]);
+    });
+};
+
+module.exports = { connect, listClients, send, close };

@@ -8,27 +8,44 @@ import org.apache.cordova.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.*;
 
 public class WebSocketInstance extends WebSocketListener {
+    private static final int DEFAULT_CLOSE_CODE = 1000;
+    private static final String DEFAULT_CLOSE_REASON = "Normal closure";
+
     private WebSocket webSocket;
     private CallbackContext callbackContext;
-    private CordovaInterface cordova;
-    private String instanceId;
+    private final CordovaInterface cordova;
+    private final String instanceId;
     private String extensions = "";
     private int readyState = 0; // CONNECTING
 
-    public WebSocketInstance(String url, JSONArray protocols, CordovaInterface cordova, String instanceId) {
+    // okHttpMainClient parameter is used. To have a single main client(singleton), with per-websocket configuration using newBuilder method.
+    public WebSocketInstance(String url, JSONArray protocols, JSONObject headers, OkHttpClient okHttpMainClient, CordovaInterface cordova, String instanceId) {
         this.cordova = cordova;
         this.instanceId = instanceId;
 
-        OkHttpClient client = new OkHttpClient.Builder()
+        OkHttpClient client = okHttpMainClient.newBuilder()
                 .connectTimeout(10, TimeUnit.SECONDS)
                 .build();
 
         Request.Builder requestBuilder = new Request.Builder().url(url);
+
+        // custom headers support.
+        if (headers != null) {
+            Iterator<String> keys = headers.keys();
+            while (keys.hasNext()) {
+                String key = keys.next();
+                String value = headers.optString(key);
+                requestBuilder.addHeader(key, value);
+            }
+        }
+
+        // adds Sec-WebSocket-Protocol header if protocols is present.
         if (protocols != null) {
             StringBuilder protocolHeader = new StringBuilder();
             for (int i = 0; i < protocols.length(); i++) {
@@ -56,14 +73,20 @@ public class WebSocketInstance extends WebSocketListener {
         }
     }
 
-    public void close() {
+    public void close(int code, String reason) {
         if (webSocket != null) {
             readyState = 2; // CLOSING
-            webSocket.close(1000, "Normal closure");
+            webSocket.close(code, reason);
             Log.d("WebSocketInstance", "websocket instanceId=" + this.instanceId + " received close() action call");
         } else {
             Log.d("WebSocketInstance", "websocket instanceId=" + this.instanceId + " received close() action call, ignoring... as webSocket is null (not present)");
         }
+    }
+
+    public void close() {
+        Log.d("WebSocketInstance", "WebSocket instanceId=" + this.instanceId + " close() called with no arguments. Using defaults.");
+        // Calls the more specific version with default values
+        close(DEFAULT_CLOSE_CODE, DEFAULT_CLOSE_REASON);
     }
 
     @Override
@@ -76,26 +99,26 @@ public class WebSocketInstance extends WebSocketListener {
     }
 
     @Override
-    public void onMessage(@NonNull WebSocket webSocket, String text) {
+    public void onMessage(@NonNull WebSocket webSocket, @NonNull String text) {
         sendEvent("message", text);
         Log.d("WebSocketInstance", "websocket instanceId=" + this.instanceId +  " Received message: " + text);
     }
 
     @Override
-    public void onClosing(WebSocket webSocket, int code, String reason) {
+    public void onClosing(@NonNull WebSocket webSocket, int code, @NonNull String reason) {
         this.readyState = 2; // CLOSING
         Log.i("WebSocketInstance", "websocket instanceId=" + this.instanceId + " is Closing code: " + code + " reason: " + reason);
     }
 
     @Override
-    public void onClosed(WebSocket webSocket, int code, String reason) {
+    public void onClosed(@NonNull WebSocket webSocket, int code, @NonNull String reason) {
         this.readyState = 3; // CLOSED
         sendEvent("close", reason);
         Log.i("WebSocketInstance", "websocket instanceId=" + this.instanceId + " Closed code: " + code + " reason: " + reason);
     }
 
     @Override
-    public void onFailure(WebSocket webSocket, Throwable t, Response response) {
+    public void onFailure(@NonNull WebSocket webSocket, Throwable t, Response response) {
         this.readyState = 3; // CLOSED
         sendEvent("error", t.getMessage());
         Log.e("WebSocketInstance", "websocket instanceId=" + this.instanceId + " Error: " + t.getMessage());

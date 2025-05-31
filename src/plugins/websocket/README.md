@@ -8,7 +8,9 @@ It aims to mimic the [WebSocket API](https://developer.mozilla.org/en-US/docs/We
 * ✅ WebSocket API-like interface
 * ✅ Event support: `onopen`, `onmessage`, `onerror`, `onclose`
 * ✅ `extensions` and `readyState` properties
+* ✅ `listClients()` to list active connections
 * ✅ Support for protocols
+* ✅ Support for Custom Headers.
 * ✅ Compatible with Cordova for Android
 
 ---
@@ -24,7 +26,7 @@ const WebSocketPlugin = cordova.websocket;
 ### Connect to WebSocket
 
 ```javascript
-WebSocketPlugin.connect("wss://example.com/socket", ["protocol1", "protocol2"])
+WebSocketPlugin.connect("wss://example.com/socket", ["protocol1", "protocol2"], headers)
   .then(ws => {
     ws.onopen = (e) => console.log("Connected!", e);
     ws.onmessage = (e) => console.log("Message:", e.data);
@@ -43,21 +45,35 @@ WebSocketPlugin.connect("wss://example.com/socket", ["protocol1", "protocol2"])
 
 ### Methods
 
-* `WebSocketPlugin.connect(url, protocols)`
+* `WebSocketPlugin.connect(url, protocols, headers)`
 
     * Connects to a WebSocket server.
     * `url`: The WebSocket server URL.
     * `protocols`: (Optional) An array of subprotocol strings.
-    * Returns: A Promise that resolves to a `WebSocketInstance`.
+    * `headers` (object, optional): Custom headers as key-value pairs.
+    * **Returns:** A Promise that resolves to a `WebSocketInstance`.
+* `WebSocketPlugin.listClients()`
+    * Lists all stored webSocket instance IDs.
+    * **Returns:** `Promise`that resolves to an array of `instanceId` strings.
+  
+* `WebSocketPlugin.send(instanceId, message)`
+    * same as `WebSocketInstance.send(message)` but needs `instanceId`.
+    * **Returns:** `Promise` that resolves.
+
+* `WebSocketPlugin.close(instanceId, code, reason)`
+    * same as `WebSocketInstance.close(code, reason)` but needs `instanceId`.
+    * **Returns:** `Promise` that resolves.
 
 * `WebSocketInstance.send(message)`
 
     * Sends a message to the server.
     * Throws an error if the connection is not open.
 
-* `WebSocketInstance.close()`
+* `WebSocketInstance.close(code, reason)`
 
     * Closes the connection.
+    * `code`: (Optional) If unspecified, a close code for the connection is automatically set: to 1000 for a normal closure, or otherwise to [another standard value in the range 1001-1015](https://www.rfc-editor.org/rfc/rfc6455.html#section-7.4.1) that indicates the actual reason the connection was closed.
+    * `reason`: A string providing a [custom WebSocket connection close reason](https://www.rfc-editor.org/rfc/rfc6455.html#section-7.1.6) (a concise human-readable prose explanation for the closure). The value must be no longer than 123 bytes (encoded in UTF-8).
 
 ---
 
@@ -81,5 +97,5 @@ WebSocketPlugin.connect("wss://example.com/socket", ["protocol1", "protocol2"])
 
 * Only supported on Android (via OkHttp).
 * Make sure to handle connection lifecycle properly (close sockets when done).
-
+* `listClients()` is useful for debugging and management.
 ---

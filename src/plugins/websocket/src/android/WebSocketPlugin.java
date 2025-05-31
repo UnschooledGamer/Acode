@@ -6,9 +6,17 @@ import org.json.*;
 import java.util.HashMap;
 import java.util.UUID;
 
-// @TODO: plugin init & plugin destroy(closing okhttp clients) lifecycles.
+import okhttp3.OkHttpClient;
+
+// TODO: plugin init & plugin destroy(closing okhttp clients) lifecycles. (✅)
 public class WebSocketPlugin extends CordovaPlugin {
     private static final HashMap<String, WebSocketInstance> instances = new HashMap<>();
+    public OkHttpClient okHttpMainClient = null;
+
+    @Override
+    protected void pluginInitialize() {
+        this.okHttpMainClient = new OkHttpClient();
+    }
 
     @Override
     public boolean execute(String action, JSONArray args, final CallbackContext callbackContext) throws JSONException {
@@ -16,8 +24,9 @@ public class WebSocketPlugin extends CordovaPlugin {
             case "connect":
                 String url = args.optString(0);
                 JSONArray protocols = args.optJSONArray(1);
+                JSONObject headers = args.optJSONObject(2);
                 String id = UUID.randomUUID().toString();
-                WebSocketInstance instance = new WebSocketInstance(url, protocols, cordova, id);
+                WebSocketInstance instance = new WebSocketInstance(url, protocols, headers, this.okHttpMainClient, cordova, id);
                 instances.put(id, instance);
                 callbackContext.success(id);
                 return true;
@@ -36,9 +45,11 @@ public class WebSocketPlugin extends CordovaPlugin {
 
             case "close":
                 instanceId = args.optString(0);
+                int code = args.optInt(1);
+                String reason = args.optString(2);
                 inst = instances.get(instanceId);
                 if (inst != null) {
-                    inst.close();
+                    inst.close(code, reason);
                     instances.remove(instanceId);
                     callbackContext.success();
                 } else {
@@ -56,8 +67,26 @@ public class WebSocketPlugin extends CordovaPlugin {
                 }
                 return true;
 
+            case "listClients":
+                JSONArray clientIds = new JSONArray();
+                for (String clientId : instances.keySet()) {
+                    clientIds.put(clientId);
+                }
+                callbackContext.success(clientIds);
+                return true;
             default:
                 return false;
         }
+    }
+
+    @Override
+    public void onDestroy() {
+        // clear all.
+        for (WebSocketInstance instance : instances.values()) {
+            // Closing them gracefully.
+            instance.close();
+        }
+        instances.clear();
+        okHttpMainClient.dispatcher().executorService().shutdown();
     }
 }
