@@ -61,9 +61,9 @@ public class WebSocketInstance extends WebSocketListener {
             readyState = 2; // CLOSING
             webSocket.close(1000, "Normal closure");
             Log.d("WebSocketInstance", "websocket instanceId=" + this.instanceId + " received close() action call");
+        } else {
+            Log.d("WebSocketInstance", "websocket instanceId=" + this.instanceId + " received close() action call, ignoring... as webSocket is null (not present)");
         }
-
-        Log.d("WebSocketInstance", "websocket instanceId=" + this.instanceId + " received close() action call, ignoring... as webSocket is null (not present)");
     }
 
     @Override
@@ -84,8 +84,14 @@ public class WebSocketInstance extends WebSocketListener {
     @Override
     public void onClosing(WebSocket webSocket, int code, String reason) {
         this.readyState = 2; // CLOSING
-        sendEvent("close", reason);
         Log.i("WebSocketInstance", "websocket instanceId=" + this.instanceId + " is Closing code: " + code + " reason: " + reason);
+    }
+
+    @Override
+    public void onClosed(WebSocket webSocket, int code, String reason) {
+        this.readyState = 3; // CLOSED
+        sendEvent("close", reason);
+        Log.i("WebSocketInstance", "websocket instanceId=" + this.instanceId + " Closed code: " + code + " reason: " + reason);
     }
 
     @Override
