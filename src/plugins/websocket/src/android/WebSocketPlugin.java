@@ -62,8 +62,8 @@ public class WebSocketPlugin extends CordovaPlugin {
                     } else if(!error.isEmpty()) {
                         // if error is empty means the websocket is not ready/open.
                         callbackContext.error(error);
+                        return true;
                     }
-                    callbackContext.success();
                 } else {
                     callbackContext.error("Invalid instance ID");
                 }
