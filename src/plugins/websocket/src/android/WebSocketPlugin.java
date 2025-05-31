@@ -1,5 +1,7 @@
 package com.foxdebug.websocket;
 
+import android.util.Log;
+
 import org.apache.cordova.*;
 import org.json.*;
 
@@ -35,6 +37,7 @@ public class WebSocketPlugin extends CordovaPlugin {
                 String instanceId = args.optString(0);
                 String message = args.optString(1);
                 WebSocketInstance inst = instances.get(instanceId);
+                Log.d("WebSocketPlugin", "send called");
                 if (inst != null) {
                     inst.send(message);
                     callbackContext.success();
@@ -45,12 +48,21 @@ public class WebSocketPlugin extends CordovaPlugin {
 
             case "close":
                 instanceId = args.optString(0);
-                int code = args.optInt(1);
-                String reason = args.optString(2);
+                // defaults code to 1000 & reason to "Normal closure"
+                int code = args.optInt(1, 1000);
+                String reason = args.optString(2, "Normal closure");
                 inst = instances.get(instanceId);
                 if (inst != null) {
-                    inst.close(code, reason);
-                    instances.remove(instanceId);
+                    String error = inst.close(code, reason);
+
+                    if(error == null) {
+                        instances.remove(instanceId);
+                        callbackContext.success();
+                        return true;
+                    } else if(!error.isEmpty()) {
+                        // if error is empty means the websocket is not ready/open.
+                        callbackContext.error(error);
+                    }
                     callbackContext.success();
                 } else {
                     callbackContext.error("Invalid instance ID");
@@ -88,5 +100,6 @@ public class WebSocketPlugin extends CordovaPlugin {
         }
         instances.clear();
         okHttpMainClient.dispatcher().executorService().shutdown();
+        Log.i("WebSocketPlugin", "cleaned up... on destroy");
     }
 }

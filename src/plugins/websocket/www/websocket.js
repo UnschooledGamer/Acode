@@ -15,14 +15,14 @@ class WebSocketInstance {
             if (event.type === 'open') {
                 this.readyState = WebSocketInstance.OPEN;
                 this.extensions = event.extensions || '';
-                if (this.onopen) this.onopen(event);
+                if (this.onopen) this.onopen.bind(this)(event);
             }
-            if (event.type === 'message' && this.onmessage) this.onmessage(event);
+            if (event.type === 'message' && this.onmessage) this.onmessage.bind(this)(event);
             if (event.type === 'close') {
                 this.readyState = WebSocketInstance.CLOSED;
-                if (this.onclose) this.onclose(event);
+                if (this.onclose) this.onclose.bind(this)(event);
             }
-            if (event.type === 'error' && this.onerror) this.onerror(event);
+            if (event.type === 'error' && this.onerror) this.onerror.bind(this)(event);
         }, null, "WebSocketPlugin", "registerListener", [this.instanceId]);
     }
 

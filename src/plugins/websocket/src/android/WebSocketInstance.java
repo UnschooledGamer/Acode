@@ -68,25 +68,42 @@ public class WebSocketInstance extends WebSocketListener {
     }
 
     public void send(String message) {
-        if (webSocket != null) {
-            webSocket.send(message);
+        if (this.webSocket != null) {
+            this.webSocket.send(message);
+            Log.d("WebSocketInstance", "websocket instanceId=" + this.instanceId + " received send() action call, sending message=" + message);
+        } else {
+            Log.d("WebSocketInstance", "websocket instanceId=" + this.instanceId + " received send() action call, ignoring... as webSocket is null (not present)");
         }
     }
 
-    public void close(int code, String reason) {
-        if (webSocket != null) {
-            readyState = 2; // CLOSING
-            webSocket.close(code, reason);
-            Log.d("WebSocketInstance", "websocket instanceId=" + this.instanceId + " received close() action call");
+    public String close(int code, String reason) {
+        if (this.webSocket != null) {
+            this.readyState = 2; // CLOSING
+            try {
+                boolean result = this.webSocket.close(code, reason);
+                Log.d("WebSocketInstance", "websocket instanceId=" + this.instanceId + " received close() action call");
+
+                // if a graceful shutdown was already underway...
+                // or if the web socket is already closed or canceled. do nothing.
+                if(!result) {
+                    return null;
+                }
+            } catch (Exception e) {
+                return e.getMessage();
+            }
+
+            return null;
         } else {
             Log.d("WebSocketInstance", "websocket instanceId=" + this.instanceId + " received close() action call, ignoring... as webSocket is null (not present)");
+            // TODO: finding a better way of telling it wasn't successful.
+            return "";
         }
     }
 
-    public void close() {
+    public String close() {
         Log.d("WebSocketInstance", "WebSocket instanceId=" + this.instanceId + " close() called with no arguments. Using defaults.");
         // Calls the more specific version with default values
-        close(DEFAULT_CLOSE_CODE, DEFAULT_CLOSE_REASON);
+        return close(DEFAULT_CLOSE_CODE, DEFAULT_CLOSE_REASON);
     }
 
     @Override
