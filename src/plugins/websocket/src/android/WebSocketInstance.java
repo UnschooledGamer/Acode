@@ -6,6 +6,7 @@ import androidx.annotation.NonNull;
 
 import org.apache.cordova.*;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Iterator;
@@ -130,8 +131,15 @@ public class WebSocketInstance extends WebSocketListener {
     @Override
     public void onClosed(@NonNull WebSocket webSocket, int code, @NonNull String reason) {
         this.readyState = 3; // CLOSED
-        sendEvent("close", reason);
         Log.i("WebSocketInstance", "websocket instanceId=" + this.instanceId + " Closed code: " + code + " reason: " + reason);
+        JSONObject closedEvent = new JSONObject();
+        try {
+            closedEvent.put("code", code);
+            closedEvent.put("reason", reason);
+        } catch (JSONException e) {
+            Log.e("WebSocketInstance", "Error creating close event", e);
+        }
+        sendEvent("close", closedEvent.toString());
     }
 
     @Override

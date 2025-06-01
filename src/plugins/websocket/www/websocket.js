@@ -20,7 +20,7 @@ class WebSocketInstance {
             if (event.type === 'message' && this.onmessage) this.onmessage.bind(this)(event);
             if (event.type === 'close') {
                 this.readyState = WebSocketInstance.CLOSED;
-                if (this.onclose) this.onclose.bind(this)(event);
+                if (this.onclose) this.onclose.bind(this)({ code: event?.data?.code, reason: event?.data?.reason, type: event.type });
             }
             if (event.type === 'error' && this.onerror) this.onerror.bind(this)(event);
         }, null, "WebSocketPlugin", "registerListener", [this.instanceId]);
