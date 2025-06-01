@@ -7,12 +7,13 @@ import org.json.*;
 
 import java.util.HashMap;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import okhttp3.OkHttpClient;
 
 // TODO: plugin init & plugin destroy(closing okhttp clients) lifecycles. (✅)
 public class WebSocketPlugin extends CordovaPlugin {
-    private static final HashMap<String, WebSocketInstance> instances = new HashMap<>();
+    private static final ConcurrentHashMap<String, WebSocketInstance> instances = new ConcurrentHashMap<>();
     public OkHttpClient okHttpMainClient = null;
 
     @Override
