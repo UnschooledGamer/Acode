@@ -23,12 +23,15 @@ public class WebSocketInstance extends WebSocketListener {
     private final CordovaInterface cordova;
     private final String instanceId;
     private String extensions = "";
+    private String protocol = "";
+    private String binaryType = "";
     private int readyState = 0; // CONNECTING
 
     // okHttpMainClient parameter is used. To have a single main client(singleton), with per-websocket configuration using newBuilder method.
-    public WebSocketInstance(String url, JSONArray protocols, JSONObject headers, OkHttpClient okHttpMainClient, CordovaInterface cordova, String instanceId) {
+    public WebSocketInstance(String url, JSONArray protocols, JSONObject headers, String binaryType, OkHttpClient okHttpMainClient, CordovaInterface cordova, String instanceId) {
         this.cordova = cordova;
         this.instanceId = instanceId;
+        this.binaryType = binaryType;
 
         OkHttpClient client = okHttpMainClient.newBuilder()
                 .connectTimeout(10, TimeUnit.SECONDS)
@@ -112,14 +115,33 @@ public class WebSocketInstance extends WebSocketListener {
         this.webSocket = webSocket;
         this.readyState = 1; // OPEN
         this.extensions = response.headers("Sec-WebSocket-Extensions").toString();
+        this.protocol = response.header("Sec-WebSocket-Protocol");
         Log.i("WebSocketInstance", "websocket instanceId=" + this.instanceId + " Opened" + "received extensions=" + this.extensions);
-        sendEvent("open", null);
+        sendEvent("open", null, false);
     }
 
     @Override
     public void onMessage(@NonNull WebSocket webSocket, @NonNull String text) {
-        sendEvent("message", text);
         Log.d("WebSocketInstance", "websocket instanceId=" + this.instanceId +  " Received message: " + text);
+        sendEvent("message", text, false);
+    }
+
+    // This is called when the Websocket server sends a binary(type 0x2) message.
+    @Override
+    public void onMessage(@NonNull WebSocket webSocket, @NonNull ByteString bytes) {
+        Log.d("WebSocketInstance", "websocket instanceId=" + this.instanceId +  " Received message(bytes): " + bytes.toString());
+
+        try {
+            if ("arraybuffer".equals(this.binaryType)) {
+                String base64 = bytes.base64();
+                sendEvent("message", base64, true);
+            } else {
+                sendEvent("message", bytes.utf8(), true);
+            }
+        } catch (Exception e) {
+            Log.e("WebSocketInstance", "Error sending message", e);
+        }
+
     }
 
     @Override
@@ -139,24 +161,26 @@ public class WebSocketInstance extends WebSocketListener {
         } catch (JSONException e) {
             Log.e("WebSocketInstance", "Error creating close event", e);
         }
-        sendEvent("close", closedEvent.toString());
+        sendEvent("close", closedEvent.toString(), false);
     }
 
     @Override
     public void onFailure(@NonNull WebSocket webSocket, Throwable t, Response response) {
         this.readyState = 3; // CLOSED
-        sendEvent("error", t.getMessage());
+        sendEvent("error", t.getMessage(), false);
         Log.e("WebSocketInstance", "websocket instanceId=" + this.instanceId + " Error: " + t.getMessage());
     }
 
-    private void sendEvent(String type, String data) {
+    private void sendEvent(String type, String data, boolean isBinary) {
         if (callbackContext != null) {
             try {
                 JSONObject event = new JSONObject();
                 event.put("type", type);
                 event.put("extensions", this.extensions);
                 event.put("readyState", this.readyState);
+                event.put("isBinary", isBinary ? true : false);
                 if (data != null) event.put("data", data);
+                Log.d("WebSocketInstance", "sending event: " + type + " eventObj " + event.toString());
                 PluginResult result = new PluginResult(PluginResult.Status.OK, event);
                 result.setKeepCallback(true);
                 callbackContext.sendPluginResult(result);

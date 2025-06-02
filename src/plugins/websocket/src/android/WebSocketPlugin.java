@@ -28,8 +28,9 @@ public class WebSocketPlugin extends CordovaPlugin {
                 String url = args.optString(0);
                 JSONArray protocols = args.optJSONArray(1);
                 JSONObject headers = args.optJSONObject(2);
+                String binaryType = args.optString(3, null);
                 String id = UUID.randomUUID().toString();
-                WebSocketInstance instance = new WebSocketInstance(url, protocols, headers, this.okHttpMainClient, cordova, id);
+                WebSocketInstance instance = new WebSocketInstance(url, protocols, headers, binaryType, this.okHttpMainClient, cordova, id);
                 instances.put(id, instance);
                 callbackContext.success(id);
                 return true;
