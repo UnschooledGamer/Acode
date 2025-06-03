@@ -14,6 +14,8 @@ import java.util.concurrent.TimeUnit;
 
 import okhttp3.*;
 
+import okio.ByteString;
+
 public class WebSocketInstance extends WebSocketListener {
     private static final int DEFAULT_CLOSE_CODE = 1000;
     private static final String DEFAULT_CLOSE_REASON = "Normal closure";
