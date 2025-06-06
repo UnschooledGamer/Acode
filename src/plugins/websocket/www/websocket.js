@@ -5,13 +5,14 @@ var exec = require('cordova/exec');
 let DEBUG = false;
 
 const logIfDebug = (...args) => {
-    if (DEBUG) {
+    console.log("DEBUG flag -> ", cordova.websocket.DEBUG)
+    if (cordova.websocket.DEBUG) {
         console.log(...args);
     }
 };
 
 class WebSocketInstance extends EventTarget {
-    constructor(url, instanceId) {
+    constructor(url, instanceId, binaryType) {
         super();
         this.instanceId = instanceId;
         this.extensions = '';
@@ -21,7 +22,8 @@ class WebSocketInstance extends EventTarget {
         this.onclose = null;
         this.onerror = null;
         this.url = url;
-        this.binaryType = ''; // empty as Default is string.
+        // NOTE: blob is not supported currently.
+        this._binaryType = binaryType ? binaryType : ''; // empty as Default is string (Same Plugins might require this behavior)
 
         exec((event) => {
             logIfDebug(`[Cordova WebSocket - ID=${this.instanceId}] Event from native:`, event);
@@ -35,7 +37,9 @@ class WebSocketInstance extends EventTarget {
 
             if (event.type === 'message') {
                 let msgData = event.data;
-                if (event.isBinary && this.binaryType === 'arraybuffer') {
+                // parseAsText solely takes care of the state of binaryType,
+                // sometimes, syncing binaryType to Java side might take longer. it's there to not wrongly pass normal string as base64.
+                if (event.isBinary && this.binaryType === 'arraybuffer' && !event.parseAsText) {
                     let binary = atob(msgData);
                     let bytes = new Uint8Array(binary.length);
                     for (let i = 0; i < binary.length; i++) {
@@ -44,7 +48,10 @@ class WebSocketInstance extends EventTarget {
                     msgData = bytes.buffer;
                 }
                 logIfDebug(`[Cordova WebSocket - ID=${this.instanceId}] msg Event:`, event, msgData);
-                const msgEvent = new MessageEvent('message', { data: msgData });
+                const msgEvent = new MessageEvent('message', { data: msgData  });
+
+                Object.defineProperty(msgEvent, "binary", { enumerable: true, value: event.isBinary })
+
                 if (this.onmessage) this.onmessage(msgEvent);
                 this.dispatchEvent(msgEvent);
             }
@@ -64,7 +71,23 @@ class WebSocketInstance extends EventTarget {
         }, null, "WebSocketPlugin", "registerListener", [this.instanceId]);
     }
 
-    send(message) {
+    get binaryType() {
+        return this._binaryType || '';
+    }
+    
+    set binaryType(type) {
+        // blob isn't supported but checked as browser compatibility, & it default to empty string
+        if (type === 'blob' || type === 'arraybuffer' || type === '') {
+            this._binaryType = type !== 'blob' ? type : '';
+
+            exec(null, null, "WebSocketPlugin", "setBinaryType", [this.instanceId, type]);
+        } else {
+            console.warn('Invalid binaryType, expected "blob" or "arraybuffer"');
+        }
+    }
+
+
+    send(message, binary) {
         if (this.readyState !== WebSocketInstance.OPEN) {
             throw new Error(`WebSocket is not open/connected`);
         }
@@ -73,12 +96,18 @@ class WebSocketInstance extends EventTarget {
         if (message instanceof ArrayBuffer || ArrayBuffer.isView(message)) {
             const uint8Array = message instanceof ArrayBuffer ? new Uint8Array(message) : message;
             finalMessage = btoa(String.fromCharCode.apply(null, uint8Array));
-            
-            exec(() => logIfDebug(`[Cordova WebSocket - ID=${this.instanceId}] Sent message:`, finalMessage), (err) => console.error(`[Cordova WebSocket - ID=${this.instanceId}] Send error:`, err), "WebSocketPlugin", "send", [this.instanceId, finalMessage]);
+
+            // set to true as it's the data of a binary (type 0x2) message.
+            binary = true;
+
+            exec(() => logIfDebug(`[Cordova WebSocket - ID=${this.instanceId}] Sent message(binary payload):`, finalMessage), (err) => console.error(`[Cordova WebSocket - ID=${this.instanceId}] Send error:`, err), "WebSocketPlugin", "send", [this.instanceId, finalMessage, binary]);
         } else if (typeof message === 'string') {
             finalMessage = message;
+            
+            // maybe a String to be sent as Binary (if it's true)
+            if(binary) finalMessage = btoa(message)
 
-            exec(() => logIfDebug(`[Cordova WebSocket - ID=${this.instanceId}] Sent message:`, finalMessage), (err) => console.error(`[Cordova WebSocket - ID=${this.instanceId}] Send error:`, err), "WebSocketPlugin", "send", [this.instanceId, finalMessage]);
+            exec(() => logIfDebug(`[Cordova WebSocket - ID=${this.instanceId}] Sent message(binary=${binary}):`, finalMessage), (err) => console.error(`[Cordova WebSocket - ID=${this.instanceId}] Send error:`, err), "WebSocketPlugin", "send", [this.instanceId, finalMessage, binary]);
         } else {
             throw new Error(`Unsupported message type: ${typeof message}`);
         }
@@ -115,15 +144,18 @@ const listClients = function() {
 
 /** Utility functions, in-case you lost the websocketInstance returned from the connect function */
 
-const send = function(instanceId, message) {
+const send = function(instanceId, message, binary) {
     return new Promise((resolve, reject) => {
         if (typeof message === 'string') {
-            exec(resolve, reject, "WebSocketPlugin", "send", [instanceId, message]);
+            
+            if(binary) message = btoa(message);
+
+            exec(resolve, reject, "WebSocketPlugin", "send", [instanceId, message, binary]);
         } else if (message instanceof ArrayBuffer || ArrayBuffer.isView(message)) {
             const uint8Array = message instanceof ArrayBuffer ? new Uint8Array(message) : message;
             const base64Message = btoa(String.fromCharCode.apply(null, uint8Array));
             
-            exec(resolve, reject, "WebSocketPlugin", "send", [instanceId, base64Message]);
+            exec(resolve, reject, "WebSocketPlugin", "send", [instanceId, base64Message, true]);
         } else {
             reject(`Unsupported message type: ${typeof message}`);
         }

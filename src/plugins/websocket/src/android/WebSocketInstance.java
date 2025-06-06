@@ -1,5 +1,6 @@
 package com.foxdebug.websocket;
 
+import android.util.Base64;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -17,6 +18,7 @@ import okhttp3.*;
 import okio.ByteString;
 
 public class WebSocketInstance extends WebSocketListener {
+    private static final String TAG = "WebSocketInstance";
     private static final int DEFAULT_CLOSE_CODE = 1000;
     private static final String DEFAULT_CLOSE_REASON = "Normal closure";
 
@@ -73,13 +75,26 @@ public class WebSocketInstance extends WebSocketListener {
         callbackContext.sendPluginResult(result);
     }
 
-    public void send(String message) {
+    public void send(String message, boolean isBinary) {
         if (this.webSocket != null) {
+            Log.d(TAG, "websocket instanceId=" + this.instanceId + " received send(..., isBinary=" + isBinary + ") action call, sending message=" + message);
+            if(isBinary) {
+                this.sendBinary(message);
+                return;
+            }
             this.webSocket.send(message);
-            Log.d("WebSocketInstance", "websocket instanceId=" + this.instanceId + " received send() action call, sending message=" + message);
         } else {
-            Log.d("WebSocketInstance", "websocket instanceId=" + this.instanceId + " received send() action call, ignoring... as webSocket is null (not present)");
+            Log.d(TAG, "websocket instanceId=" + this.instanceId + " received send(..., isBinary=" + isBinary + ")  ignoring... as webSocket is null (not present/connected)");
         }
+    }
+
+    /**
+     * Sends bytes as the data of a binary (type 0x2) message.
+     * @param base64Data Binary Data received from JS bridge encoded as base64 String
+     */
+    private void sendBinary(String base64Data) {
+        byte[] data = Base64.decode(base64Data, Base64.DEFAULT);
+        this.webSocket.send(ByteString.of(data));
     }
 
     public String close(int code, String reason) {
@@ -87,7 +102,7 @@ public class WebSocketInstance extends WebSocketListener {
             this.readyState = 2; // CLOSING
             try {
                 boolean result = this.webSocket.close(code, reason);
-                Log.d("WebSocketInstance", "websocket instanceId=" + this.instanceId + " received close() action call");
+                Log.d(TAG, "websocket instanceId=" + this.instanceId + " received close() action call, code=" + code + " reason=" + reason + " close method result: " + result);
 
                 // if a graceful shutdown was already underway...
                 // or if the web socket is already closed or canceled. do nothing.
@@ -100,14 +115,14 @@ public class WebSocketInstance extends WebSocketListener {
 
             return null;
         } else {
-            Log.d("WebSocketInstance", "websocket instanceId=" + this.instanceId + " received close() action call, ignoring... as webSocket is null (not present)");
+            Log.d(TAG, "websocket instanceId=" + this.instanceId + " received close() action call, ignoring... as webSocket is null (not present)");
             // TODO: finding a better way of telling it wasn't successful.
             return "";
         }
     }
 
     public String close() {
-        Log.d("WebSocketInstance", "WebSocket instanceId=" + this.instanceId + " close() called with no arguments. Using defaults.");
+        Log.d(TAG, "WebSocket instanceId=" + this.instanceId + " close() called with no arguments. Using defaults.");
         // Calls the more specific version with default values
         return close(DEFAULT_CLOSE_CODE, DEFAULT_CLOSE_REASON);
     }
@@ -118,30 +133,30 @@ public class WebSocketInstance extends WebSocketListener {
         this.readyState = 1; // OPEN
         this.extensions = response.headers("Sec-WebSocket-Extensions").toString();
         this.protocol = response.header("Sec-WebSocket-Protocol");
-        Log.i("WebSocketInstance", "websocket instanceId=" + this.instanceId + " Opened" + "received extensions=" + this.extensions);
-        sendEvent("open", null, false);
+        Log.i(TAG, "websocket instanceId=" + this.instanceId + " Opened" + "received extensions=" + this.extensions);
+        sendEvent("open", null, false, false);
     }
 
     @Override
     public void onMessage(@NonNull WebSocket webSocket, @NonNull String text) {
-        Log.d("WebSocketInstance", "websocket instanceId=" + this.instanceId +  " Received message: " + text);
-        sendEvent("message", text, false);
+        Log.d(TAG, "websocket instanceId=" + this.instanceId +  " Received message: " + text);
+        sendEvent("message", text, false, false);
     }
 
     // This is called when the Websocket server sends a binary(type 0x2) message.
     @Override
     public void onMessage(@NonNull WebSocket webSocket, @NonNull ByteString bytes) {
-        Log.d("WebSocketInstance", "websocket instanceId=" + this.instanceId +  " Received message(bytes): " + bytes.toString());
+        Log.d(TAG, "websocket instanceId=" + this.instanceId +  " Received message(bytes/binary payload): " + bytes.toString());
 
         try {
             if ("arraybuffer".equals(this.binaryType)) {
                 String base64 = bytes.base64();
-                sendEvent("message", base64, true);
+                sendEvent("message", base64, true, false);
             } else {
-                sendEvent("message", bytes.utf8(), true);
+                sendEvent("message", bytes.utf8(), true, true);
             }
         } catch (Exception e) {
-            Log.e("WebSocketInstance", "Error sending message", e);
+            Log.e(TAG, "Error sending message", e);
         }
 
     }
@@ -149,45 +164,50 @@ public class WebSocketInstance extends WebSocketListener {
     @Override
     public void onClosing(@NonNull WebSocket webSocket, int code, @NonNull String reason) {
         this.readyState = 2; // CLOSING
-        Log.i("WebSocketInstance", "websocket instanceId=" + this.instanceId + " is Closing code: " + code + " reason: " + reason);
+        Log.i(TAG, "websocket instanceId=" + this.instanceId + " is Closing code: " + code + " reason: " + reason);
     }
 
     @Override
     public void onClosed(@NonNull WebSocket webSocket, int code, @NonNull String reason) {
         this.readyState = 3; // CLOSED
-        Log.i("WebSocketInstance", "websocket instanceId=" + this.instanceId + " Closed code: " + code + " reason: " + reason);
+        Log.i(TAG, "websocket instanceId=" + this.instanceId + " Closed code: " + code + " reason: " + reason);
         JSONObject closedEvent = new JSONObject();
         try {
             closedEvent.put("code", code);
             closedEvent.put("reason", reason);
         } catch (JSONException e) {
-            Log.e("WebSocketInstance", "Error creating close event", e);
+            Log.e(TAG, "Error creating close event", e);
         }
-        sendEvent("close", closedEvent.toString(), false);
+        sendEvent("close", closedEvent.toString(), false, false);
     }
 
     @Override
     public void onFailure(@NonNull WebSocket webSocket, Throwable t, Response response) {
         this.readyState = 3; // CLOSED
-        sendEvent("error", t.getMessage(), false);
-        Log.e("WebSocketInstance", "websocket instanceId=" + this.instanceId + " Error: " + t.getMessage());
+        sendEvent("error", t.getMessage(), false, false);
+        Log.e(TAG, "websocket instanceId=" + this.instanceId + " Error: " + t.getMessage());
     }
 
-    private void sendEvent(String type, String data, boolean isBinary) {
+    public void setBinaryType(String binaryType) {
+        this.binaryType = binaryType;
+    }
+
+    private void sendEvent(String type, String data, boolean isBinary, boolean parseAsText) {
         if (callbackContext != null) {
             try {
                 JSONObject event = new JSONObject();
                 event.put("type", type);
                 event.put("extensions", this.extensions);
                 event.put("readyState", this.readyState);
-                event.put("isBinary", isBinary ? true : false);
+                event.put("isBinary", isBinary);
+                event.put("parseAsText", parseAsText);
                 if (data != null) event.put("data", data);
-                Log.d("WebSocketInstance", "sending event: " + type + " eventObj " + event.toString());
+                Log.d(TAG, "sending event: " + type + " eventObj " + event.toString());
                 PluginResult result = new PluginResult(PluginResult.Status.OK, event);
                 result.setKeepCallback(true);
                 callbackContext.sendPluginResult(result);
             } catch (Exception e) {
-                Log.e("WebSocketInstance", "Error sending event", e);
+                Log.e(TAG, "Error sending event", e);
             }
         }
     }
