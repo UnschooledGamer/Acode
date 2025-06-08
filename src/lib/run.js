@@ -4,7 +4,9 @@ import box from "dialogs/box";
 import fsOperation from "fileSystem";
 import markdownIt from "markdown-it";
 import anchor from "markdown-it-anchor";
+import markdownItFootnote from "markdown-it-footnote";
 import MarkdownItGitHubAlerts from "markdown-it-github-alerts";
+import markdownItTaskLists from "markdown-it-task-lists";
 import mimeType from "mime-types";
 import mustache from "mustache";
 import path from "path-browserify";
@@ -18,8 +20,6 @@ import EditorFile from "./editorFile";
 import EditorManager from "./editorManager";
 import openFolder, { addedFolder } from "./openFolder";
 import appSettings from "./settings";
-import markdownItFootnote from "markdown-it-footnote";
-import markdownItTaskLists from "markdown-it-task-lists";
 
 /**@type {Server} */
 let webServer;
