@@ -18,6 +18,8 @@ import EditorFile from "./editorFile";
 import EditorManager from "./editorManager";
 import openFolder, { addedFolder } from "./openFolder";
 import appSettings from "./settings";
+import markdownItFootnote from "markdown-it-footnote";
+import markdownItTaskLists from "markdown-it-task-lists";
 
 /**@type {Server} */
 let webServer;
@@ -362,6 +364,8 @@ async function run(
 										.toLowerCase()
 										.replace(/[^a-z0-9]+/g, "-"),
 							})
+							.use(markdownItTaskLists)
+							.use(markdownItFootnote)
 							.render(file.session.getValue());
 						const doc = mustache.render($_markdown, {
 							html,

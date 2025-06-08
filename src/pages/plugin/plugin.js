@@ -14,6 +14,7 @@ import markdownIt from "markdown-it";
 import anchor from "markdown-it-anchor";
 import MarkdownItGitHubAlerts from "markdown-it-github-alerts";
 import markdownItTaskLists from "markdown-it-task-lists";
+import markdownItFootnote from "markdown-it-footnote";
 import Url from "utils/Url";
 import helpers from "utils/helpers";
 import view from "./plugin.view.js";
@@ -321,6 +322,7 @@ export default async function PluginInclude(
 							.replace(/[^a-z0-9]+/g, "-"),
 				})
 				.use(markdownItTaskLists)
+				.use(markdownItFootnote)
 				.render(plugin.description),
 			changelogs: plugin.changelogs
 				? markdownIt({ html: true, xhtmlOut: true })
@@ -333,6 +335,7 @@ export default async function PluginInclude(
 									.replace(/[^a-z0-9]+/g, "-"),
 						})
 						.use(markdownItTaskLists)
+						.use(markdownItFootnote)
 						.render(plugin.changelogs)
 				: null,
 			purchased,
