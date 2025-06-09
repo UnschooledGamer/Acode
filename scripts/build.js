@@ -1,14 +1,19 @@
-const os = require('os');
+const os = require("os");
 const { execSync } = require("child_process");
 const path = require("path");
+const fs = require("fs");
 
+const platform = os.platform();
+const isWindows = platform === "win32";
 
-const platform = os.platform(); // e.g., 'linux', 'darwin', 'win32',"*bsd"
-
-if (platform !== "linux" && !platform.includes("bsd") && platform !== "darwin") {
-  log.error(`Unsupported platform: ${platform}. A Unix-like system is required.`);
+// Check for supported platforms
+if (
+  !["linux", "darwin", "win32"].includes(platform) &&
+  !platform.toLowerCase().includes("bsd")
+) {
+  console.error(`Unsupported platform: ${platform}`);
+  process.exit(1);
 }
-
 
 
 // CLI args: appType (free/paid), buildMode (d/p or debug/prod)
@@ -68,11 +73,10 @@ try {
   const match = versionOutput.match(/version\s+"(\d+)(?:\.(\d+))?/);
   const majorVersion = match ? parseInt(match[1]) : null;
 
-  const major = match?.[1];
-  const minor = match?.[2];
-  const versionString = major ? `${major}${minor ? '.' + minor : ''}` : 'unknown';
+  const versionString = match?.[1]
+    ? `${match[1]}${match[2] ? "." + match[2] : ""}`
+    : "unknown";
   log.info(`Current Java version is ${versionString}.`);
-  
 
   if (!majorVersion || majorVersion < 21) {
     log.error(`Java 21 is required.`);
@@ -91,6 +95,7 @@ log.info(`Build Mode: ${normalizedMode}`);
 //edit the android/app/src/free/AndroidManifest.xml file
 const AD_APP_ID = "ca-app-pub-5911839694379275~4255791238";
 const PROJECT_ROOT = execSync("npm prefix").toString().trim();
+const androidDir = path.join(PROJECT_ROOT, "android");
 
 try {
   // Plugin logic based on app type
@@ -123,21 +128,38 @@ try {
     );
   }
 
-  execSync(`mkdir -p ${PROJECT_ROOT}/www/css/build && mkdir -p ${PROJECT_ROOT}/www/js/build`)
+  // Create build folders
+  fs.mkdirSync(path.join(PROJECT_ROOT, "www", "css", "build"), {
+    recursive: true,
+  });
+  fs.mkdirSync(path.join(PROJECT_ROOT, "www", "js", "build"), {
+    recursive: true,
+  });
 
-  // Webpack build
+  // Webpack
   const webpackMode =
-    normalizedMode.toLowerCase() === "release" ? "production" : "development";
+    normalizedMode === "Release" ? "production" : "development";
   execSync(`webpack --progress --mode ${webpackMode}`, { stdio: "inherit" });
 
+  // Preload styles
   execSync("node ./utils/loadStyles.js", { stdio: "inherit" });
+
+  // Sync
   execSync("npm run sync", { stdio: "inherit" });
 
-  // Final Gradle command
+  // Ensure gradlew is executable on Unix systems
+  const gradlewPath = path.join(
+    androidDir,
+    isWindows ? "gradlew.bat" : "gradlew",
+  );
+  if (!isWindows) {
+    fs.chmodSync(gradlewPath, 0o755);
+  }
+
+  // Run gradle task
   const gradleTask = `assemble${normalizedType}${normalizedMode}`;
-  execSync(`sh "${PROJECT_ROOT}/scripts/gradlew-link" ${gradleTask}`, {
-    stdio: "inherit",
-  });
+  const gradleCmd = `${isWindows ? "gradlew.bat" : "./gradlew"} ${gradleTask}`;
+  execSync(gradleCmd, { cwd: androidDir, stdio: "inherit" });
 
   log.success("Build completed successfully.");
 } catch (e) {

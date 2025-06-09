@@ -52,8 +52,9 @@ class NativeLayer : Plugin() {
                     setPositiveButton("OK", null)
                     show()
                 }
-                call.resolve()
             }
+            
+            call.resolve()
         }
 
     }

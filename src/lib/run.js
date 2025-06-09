@@ -1,3 +1,4 @@
+import ajax from "@deadlyjack/ajax";
 import tutorial from "components/tutorial";
 import alert from "dialogs/alert";
 import box from "dialogs/box";
@@ -60,6 +61,7 @@ async function run(
 	const uuid = helpers.uuid();
 
 	let isLoading = false;
+	let isFallback = false;
 	let filename, pathName, extension;
 	let port = appSettings.value.serverPort;
 	let EXECUTING_SCRIPT = uuid + "_script.js";
@@ -133,7 +135,7 @@ async function run(
 
 		//this extra www is incorrect because asset_directory itself has www
 		//but keeping it in case something depends on it
-		pathName = `${ASSETS_DIRECTORY}www/`;
+		pathName = "/";
 		port = constants.CONSOLE_PORT;
 
 		start();
@@ -154,6 +156,7 @@ async function run(
 	}
 
 	function startServer() {
+		//isFallback = true;
 		webServer?.stop();
 		webServer = CreateServer(port, openBrowser, onError);
 		webServer.setOnRequestHandler(handleRequest);
@@ -178,9 +181,14 @@ async function run(
 		const reqId = req.requestId;
 		let reqPath = req.path.substring(1);
 
+		console.log(`XREQPATH ${reqPath}`);
+		console.log(req);
+
 		if (!reqPath || (reqPath.endsWith("/") && reqPath.length === 1)) {
 			reqPath = getRelativePath();
 		}
+
+		console.log(`XREQPATH1 ${reqPath}`);
 
 		const ext = Url.extname(reqPath);
 		let url = null;
@@ -191,9 +199,9 @@ async function run(
 					isConsole ||
 					appSettings.value.console === appSettings.CONSOLE_LEGACY
 				) {
-					url = `${ASSETS_DIRECTORY}/js/build/console.build.js`;
+					url = constants.CONSOLE_BUILD_PATH;
 				} else {
-					url = `${DATA_STORAGE}/eruda.js`;
+					url = `${DATA_STORAGE}eruda.js`;
 				}
 				sendFileContent(url, reqId, "application/javascript");
 				break;
@@ -254,29 +262,80 @@ async function run(
 
 			if (pathName) {
 				const projectFolder = addedFolder[0];
-
-				//set the root folder to the file parent if no project folder is set
-				let rootFolder = pathName;
-				if (projectFolder !== undefined) {
-					rootFolder = projectFolder.url;
-				}
 				const query = url.split("?")[1];
+				let rootFolder = "";
 
-				//remove the query string if present this is needs to be removed because the url is not valid
-				if (rootFolder.startsWith("ftp:") || rootFolder.startsWith("sftp:")) {
-					if (rootFolder.includes("?")) {
-						rootFolder = rootFolder.split("?")[0];
+				if (
+					projectFolder !== undefined &&
+					pathName.includes(projectFolder.url)
+				) {
+					rootFolder = projectFolder.url;
+				} else {
+					rootFolder = pathName;
+				}
+
+				if (
+					(rootFolder.startsWith("ftp:") || rootFolder.startsWith("sftp:")) &&
+					rootFolder.includes("?")
+				) {
+					rootFolder = rootFolder.split("?")[0];
+				}
+
+				rootFolder = rootFolder.replace(/\/+$/, ""); // remove trailing slash
+				reqPath = reqPath.replace(/^\/+/, ""); // remove leading slash
+
+				const rootParts = rootFolder.split("/");
+				const pathParts = reqPath.split("/");
+
+				if (pathParts[0] === rootParts[rootParts.length - 1]) {
+					pathParts.shift();
+				}
+
+				function removePrefix(str, prefix) {
+					if (str.startsWith(prefix)) {
+						return str.slice(prefix.length);
 					}
+					return str;
 				}
 
-				url = Url.join(rootFolder, reqPath);
+				function findOverlap(a, b) {
+					// Start with the smallest possible overlap (1 character) and increase
+					let maxOverlap = "";
 
-				//attach the ftp query string to the url
-				if (query) {
-					url = `${url}?${query}`;
+					// Check all possible overlapping lengths
+					for (let i = 1; i <= Math.min(a.length, b.length); i++) {
+						// Get the ending substring of a with length i
+						const endOfA = a.slice(-i);
+						// Get the starting substring of b with length i
+						const startOfB = b.slice(0, i);
+
+						// If they match, we have a potential overlap
+						if (endOfA === startOfB) {
+							maxOverlap = endOfA;
+						}
+					}
+
+					return maxOverlap;
 				}
 
-				console.log("url", url);
+				console.log(`RootFolder ${rootFolder}`);
+				console.log(`PARTS ${pathParts.join("/")}`);
+				const overlap = findOverlap(rootFolder, pathParts.join("/"));
+
+				let fullPath;
+				if (overlap !== "") {
+					fullPath = Url.join(
+						rootFolder,
+						removePrefix(pathParts.join("/"), overlap),
+					);
+				} else {
+					fullPath = Url.join(rootFolder, pathParts.join("/"));
+				}
+
+				console.log(`Full PATH ${fullPath}`);
+
+				// Add back the query if present
+				url = query ? `${fullPath}?${query}` : fullPath;
 
 				file = editorManager.getFile(url, "uri");
 			} else if (!activeFile.uri) {
@@ -478,14 +537,22 @@ async function run(
 	 * @returns
 	 */
 	async function sendFileContent(url, id, mime, processText) {
-		const fs = fsOperation(url);
+		let text;
+		if (url.includes(constants.CONSOLE_BUILD_PATH)) {
+			text = await ajax.get(url, {
+				responseType: "text",
+			});
+		} else {
+			const fs = fsOperation(url);
 
-		if (!(await fs.exists())) {
-			error(id);
-			return;
+			if (!(await fs.exists())) {
+				error(id);
+				return;
+			}
+
+			text = await fs.readFile(appSettings.value.defaultFileEncoding);
 		}
 
-		let text = await fs.readFile(appSettings.value.defaultFileEncoding);
 		text = processText ? processText(text) : text;
 		if (mime === MIMETYPE_HTML) {
 			sendHTML(text, id);
@@ -533,16 +600,14 @@ async function run(
 
 		// Set the root folder to the file parent if no project folder is set
 		let rootFolder = pathName;
-		if (projectFolder !== undefined) {
+		if (projectFolder !== undefined && pathName.includes(projectFolder)) {
 			rootFolder = projectFolder.url;
+		} else {
+			rootFolder = pathName;
 		}
 
 		//make the uri absolute if necessary
 		rootFolder = makeUriAbsoluteIfNeeded(rootFolder);
-
-		console.log("rootFolder", rootFolder);
-		console.log("pathName", pathName);
-		console.log("filename", filename);
 
 		// Parent of the file
 		let filePath = pathName;

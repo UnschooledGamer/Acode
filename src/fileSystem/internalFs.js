@@ -31,7 +31,6 @@ const internalFs = {
 							mtime: file.mtime,
 							isFile: file.type === "file",
 							isDirectory: file.type === "directory",
-							// TODO: Link(symlink/hardlink) file detection if possible.
 							isLink: false,
 						})),
 					);
@@ -57,18 +56,42 @@ const internalFs = {
 	 * Instead, it must be possible for it to be created newly at call time. The default is true.
 	 * @returns {Promise<string>} URL where the file was written into.
 	 */
-	writeFile(filename, data, create = false, exclusive = true) {
+	writeToFile(filename, udata, create = false, exclusive = true) {
+		console.log(Filesystem.writeFile);
 		exclusive = create ? exclusive : false;
 		const name = filename.split("/").pop();
 
 		return new Promise((resolve, reject) => {
-			reject = setMessage(reject);
-			Filesystem.writeFile({
+			if (udata === undefined || udata == null) {
+				reject("udata is null");
+			}
+
+			let options = {
 				path: filename,
-				data: data,
-				encoding: Encoding.UTF8,
 				recursive: create,
-			})
+			};
+
+			reject = setMessage(reject);
+
+			if (typeof udata === "string") {
+				options.data = udata;
+				options.encoding = Encoding.UTF8;
+			} else {
+				function arrayBufferToBase64(buffer) {
+					let binary = "";
+					const bytes = new Uint8Array(buffer);
+					const len = bytes.byteLength;
+					for (let i = 0; i < len; i++) {
+						binary += String.fromCharCode(bytes[i]);
+					}
+					return btoa(binary);
+				}
+
+				options.data = arrayBufferToBase64(udata);
+				options.encoding = Encoding.BASE64;
+			}
+
+			Filesystem.writeFile(options)
 				.then((file) => {
 					console.log(
 						`Successfully written into (name: ${name}) ${filename} file`,
@@ -92,25 +115,30 @@ const internalFs = {
 	 */
 
 	delete(filename) {
-		return new Promise((resolve, reject) => {
+		return new Promise(async (resolve, reject) => {
 			console.log("Deleting " + filename);
 
-			Filesystem.stat({ path: filename })
-				.then((stats) => {
-					if (stats.type === "directory") {
-						return Filesystem.rmdir({ path: filename, recursive: true });
-					} else {
-						return Filesystem.deleteFile({ path: filename });
-					}
-				})
-				.then(() => {
-					console.log("Deleted successfully!");
-					resolve();
-				})
-				.catch((error) => {
-					console.error("Error while deleting:", error);
-					reject(error);
-				});
+			if (!(await this.exists(filename))) {
+				console.warn(`File ${filename} doesnt exists`);
+				resolve();
+			} else {
+				Filesystem.stat({ path: filename })
+					.then((stats) => {
+						if (stats.type === "directory") {
+							return Filesystem.rmdir({ path: filename, recursive: true });
+						} else {
+							return Filesystem.deleteFile({ path: filename });
+						}
+					})
+					.then(() => {
+						console.log("Deleted successfully!");
+						resolve();
+					})
+					.catch((error) => {
+						console.error("Error while deleting:", error);
+						reject(error);
+					});
+			}
 		});
 	},
 
@@ -120,19 +148,60 @@ const internalFs = {
 	 * @param {string} encoding
 	 * @returns {Promise}
 	 */
+
 	readFile(filename) {
 		return new Promise((resolve, reject) => {
 			reject = setMessage(reject);
 			Filesystem.readFile({ path: filename, encoding: Encoding.UTF8 })
 				.then((readFileResult) => {
-
 					const encoder = new TextEncoder();
 					const buffer = encoder.encode(readFileResult.data).buffer;
 
-					resolve({ data: buffer })
+					resolve({ data: buffer });
 				})
 				.catch((error) => {
 					console.error(
+						`Failed to Read File contents of "${filename}", error: `,
+						error,
+					);
+					reject(error);
+				});
+		});
+	},
+
+	readFileRaw(filename) {
+		return new Promise((resolve, reject) => {
+			reject = setMessage(reject);
+			Filesystem.readFile({ path: filename, encoding: Encoding.BASE64 })
+				.then((readFileResult) => {
+					const base64 = readFileResult.data;
+					const binary = atob(base64);
+					const bytes = new Uint8Array(binary.length);
+					for (let i = 0; i < binary.length; i++) {
+						bytes[i] = binary.charCodeAt(i);
+					}
+
+					resolve({ data: bytes.buffer });
+				})
+				.catch((error) => {
+					console.error(
+						`Failed to read raw file "${filename}", error: `,
+						error,
+					);
+					reject(error);
+				});
+		});
+	},
+
+	readStringFile(filename) {
+		return new Promise((resolve, reject) => {
+			reject = setMessage(reject);
+			Filesystem.readFile({ path: filename, encoding: Encoding.UTF8 })
+				.then((readFileResult) => {
+					resolve({ data: readFileResult.data });
+				})
+				.catch((error) => {
+					console.log(
 						`Failed to Read File contents of "${filename}", error: `,
 						error,
 					);
@@ -181,14 +250,12 @@ const internalFs = {
 			reject = setMessage(reject);
 			// TODO!: ask about `recursive` option
 			Filesystem.mkdir({
-				path: `${path}${dirname}`,
-				recursive: false,
+				path: `${path}/${dirname}`,
+				recursive: true,
 			})
 				.then(() => {
-					console.log(
-						`Created "${dirname}" Directory successfully on path: ${path}`,
-					);
-					Filesystem.stat({ path: `${path}${dirname}` })
+					console.log(`Created  ${path}/${dirname}`);
+					Filesystem.stat({ path: `${path}/${dirname}` })
 						.then((stats) => resolve(stats.url))
 						.catch(reject);
 				})
@@ -474,6 +541,7 @@ function createFs(url) {
 			return files;
 		},
 		async readFile(encoding) {
+			console.log("fs read " + url);
 			let { data } = await internalFs.readFile(url, encoding);
 
 			if (encoding) {
@@ -486,10 +554,15 @@ function createFs(url) {
 			if (typeof content === "string" && encoding) {
 				content = await encode(content, encoding);
 			}
-			return internalFs.writeFile(url, content, false, false);
+			return internalFs.writeToFile(url, content, false, false);
 		},
 		createFile(name, data) {
-			return internalFs.writeFile(Url.join(url, name), data || "", true, true);
+			return internalFs.writeToFile(
+				Url.join(url, name),
+				data || "",
+				true,
+				true,
+			);
 		},
 		createDirectory(name) {
 			return internalFs.createDir(url, name);
