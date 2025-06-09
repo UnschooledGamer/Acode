@@ -179,6 +179,8 @@ public class WebSocketInstance extends WebSocketListener {
             Log.e(TAG, "Error creating close event", e);
         }
         sendEvent("close", closedEvent.toString(), false, false);
+        // remove instance after receiving close.
+        WebSocketPlugin.removeInstance(this.instanceId);
     }
 
     @Override

@@ -63,7 +63,6 @@ public class WebSocketPlugin extends CordovaPlugin {
                             String error = inst.close(code, reason);
 
                             if(error == null) {
-                                instances.remove(instanceId);
                                 callbackContext.success();
                                 return;
                             } else if(!error.isEmpty()) {
@@ -123,5 +122,9 @@ public class WebSocketPlugin extends CordovaPlugin {
         instances.clear();
         okHttpMainClient.dispatcher().executorService().shutdown();
         Log.i("WebSocketPlugin", "cleaned up... on destroy");
+    }
+
+    public static void removeInstance(String instanceId) {
+        instances.remove(instanceId);
     }
 }
