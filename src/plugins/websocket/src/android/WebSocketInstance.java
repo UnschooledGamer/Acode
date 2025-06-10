@@ -165,6 +165,7 @@ public class WebSocketInstance extends WebSocketListener {
     public void onClosing(@NonNull WebSocket webSocket, int code, @NonNull String reason) {
         this.readyState = 2; // CLOSING
         Log.i(TAG, "websocket instanceId=" + this.instanceId + " is Closing code: " + code + " reason: " + reason);
+        this.webSocket.close(code, reason);
     }
 
     @Override
