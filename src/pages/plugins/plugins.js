@@ -14,6 +14,8 @@ import installPlugin from "lib/installPlugin";
 import prompt from "dialogs/prompt";
 import actionStack from "lib/actionStack";
 import Contextmenu from "components/contextmenu";
+import settings from "lib/settings";
+import loadPlugin from "lib/loadPlugin";
 
 /**
  *
@@ -330,6 +332,7 @@ export default function PluginsInclude(updates) {
   async function getInstalledPlugins(updates) {
     $list.installed.setAttribute("empty-msg", strings["loading..."]);
     plugins.installed = [];
+    const disabledMap = settings.value.pluginsDisabled || {};
     const installed = await fsOperation(PLUGIN_DIR).lsDir();
     await Promise.all(
       installed.map(async (item) => {
@@ -340,8 +343,10 @@ export default function PluginsInclude(updates) {
         const iconUrl = getLocalRes(id, plugin.icon);
         plugin.icon = await helpers.toInternalUri(iconUrl);
         plugin.installed = true;
+        plugin.enabled = disabledMap[id] !== true; // default to true
+        plugin.onToggleEnabled = onToggleEnabled;
         plugins.installed.push(plugin);
-        if ($list.installed.get(`[data-id="${id}"]`)) return;
+        if ($list.installed.get(`[data-id=\"${id}\"]`)) return;
         $list.installed.append(<Item {...plugin} />);
       }),
     );
@@ -410,6 +415,19 @@ export default function PluginsInclude(updates) {
       console.error(error);
       window.toast(helpers.errorMessage(error));
       addSource(sourceType, source);
+    }
+  }
+
+  async function onToggleEnabled(id, enabled) {
+    const disabledMap = settings.value.pluginsDisabled || {};
+    disabledMap[id] = !enabled;
+    settings.update({ pluginsDisabled: disabledMap }, false);
+    if (enabled) {
+      window.acode.unmountPlugin(id);
+      window.toast(strings["plugin_disabled"] || "Plugin Disabled");
+    } else {
+      await loadPlugin(id);
+      window.toast(strings["plugin_enabled"] || "Plugin enabled");
     }
   }
 }

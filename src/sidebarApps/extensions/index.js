@@ -14,6 +14,8 @@ import FileBrowser from "pages/fileBrowser";
 import plugin from "pages/plugin";
 import Url from "utils/Url";
 import helpers from "utils/helpers";
+import alert from "dialogs/alert";
+import loadPlugin from "lib/loadPlugin";
 
 /** @type {HTMLElement} */
 let $installed = null;
@@ -381,8 +383,10 @@ function ListItem({ icon, name, id, version, downloads, installed, source }) {
 	if (installed === undefined) {
 		installed = !!installedPlugins.find(({ id: _id }) => _id === id);
 	}
+	const disabledMap = settings.value.pluginsDisabled || {};
+	const enabled = disabledMap[id] !== true;
 	const $el = (
-		<div className="tile" data-plugin-id={id}>
+		<div data-plugin-id={id} data-plugin-enabled={enabled !== false} className="tile" style={enabled === false ? { opacity: 0.5, filter: 'grayscale(0.7)' } : {}}>
 			<span className="icon" style={{ backgroundImage: `url(${icon})` }} />
 			<span
 				className="text sub-text"
@@ -589,13 +593,18 @@ async function uninstall(id) {
 }
 
 async function more_plugin_action(id, pluginName) {
-	let actions;
+	const disabledMap = settings.value.pluginsDisabled || {};
+	const enabled = disabledMap[id] !== true;
+	let actions = [];
 	const pluginSettings = settings.uiSettings[`plugin-${id}`];
+
 	if (pluginSettings) {
-		actions = [strings.settings, strings.uninstall];
-	} else {
-		actions = [strings.uninstall];
+		actions.push(strings.settings);
 	}
+	
+	actions.push(enabled ? (strings.disable || "Disable") : (strings.enable || "Enable"));
+
+	actions.push(strings.uninstall);
 	const action = await select("Action", actions);
 	if (!action) return;
 	switch (action) {
@@ -610,6 +619,53 @@ async function more_plugin_action(id, pluginName) {
 			}
 			if (!$installed.collapsed) {
 				$installed.ontoggle();
+			}
+			break;
+		case (strings.disable || "Disable"):
+			// fallthrough
+		case (strings.enable || "Enable"):
+
+			if (enabled) {
+				disabledMap[id] = true; // Disabling
+			} else {
+				delete disabledMap[id]; // Enabling
+			}
+
+			settings.update({ pluginsDisabled: disabledMap }, false);
+
+			// INFO: I don't know how to get all loaded plugins(not installed).
+			const choice = await select(
+				strings.info,
+				[
+					// { value: "reload_plugins", text: strings["reload_plugins"] || "Reload Plugins" },
+					{ value: "restart_app", text: strings["restart_app"] || "Restart App" },
+					{ value: "single", text: enabled ? (strings["disable_plugin"] || "Disable this Plugin") : (strings["enable_plugin"] || "Enable this Plugin") },
+				],
+				 {
+					default: "single"
+				 }
+			);
+
+			// if (choice === "reload_plugins") {
+			// 	// Unmount all currently loaded plugins before reloading
+			// 	if (window.acode && typeof window.acode.getLoadedPluginIds === "function") {
+			// 		for (const pluginId of window.acode.getLoadedPluginIds()) {
+			// 			window.acode.unmountPlugin(pluginId);
+			// 		}
+			// 	}
+			// 	await window.loadPlugins?.();
+			// 	window.toast(strings.success);
+			// }
+			if (choice === "restart_app") {
+				location.reload();
+			} else if (choice === "single") {
+				if (enabled) {
+					window.acode.unmountPlugin(id);
+					window.toast(strings["plugin_disabled"] || "Plugin Disabled");
+				} else {
+					await loadPlugin(id);
+					window.toast(strings["plugin_enabled"] || "Plugin enabled");
+				}
 			}
 			break;
 	}
