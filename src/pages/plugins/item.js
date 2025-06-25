@@ -105,7 +105,6 @@ export default function Item({
               data-enabled={enabled}
               // style={{ marginLeft: 12, display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer',  zIndex: 100 }}
               onclick={e => {
-                console.log("on-click :: plugin-toggle-switch")
                 e.stopPropagation();
                 onToggleEnabled?.(id, enabled);
               }}
@@ -138,7 +137,6 @@ export default function Item({
                   // }}
                 />
               </span>
-              <span style={{ fontSize: '0.85em', minWidth: 60, textAlign: 'left' }}>{enabled ? 'Enabled' : 'Disabled'}</span>
             </span>
           )}
         </div>

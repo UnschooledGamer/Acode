@@ -199,7 +199,7 @@
 
     .plugin-toggle-switch[data-enabled="true"] .plugin-toggle-track,
     .plugin-toggle-track[data-enabled="true"] {
-      background: #4ade80;
+      background: var(--active-color);
     }
 
     .plugin-toggle-thumb {

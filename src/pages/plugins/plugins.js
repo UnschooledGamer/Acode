@@ -420,12 +420,15 @@ export default function PluginsInclude(updates) {
 
   async function onToggleEnabled(id, enabled) {
     const disabledMap = settings.value.pluginsDisabled || {};
-    disabledMap[id] = !enabled;
-    settings.update({ pluginsDisabled: disabledMap }, false);
+
     if (enabled) {
+      disabledMap[id] = true;
+      settings.update({ pluginsDisabled: disabledMap }, false);
       window.acode.unmountPlugin(id);
       window.toast(strings["plugin_disabled"] || "Plugin Disabled");
     } else {
+      delete disabledMap[id];
+      settings.update({ pluginsDisabled: disabledMap }, false);
       await loadPlugin(id);
       window.toast(strings["plugin_enabled"] || "Plugin enabled");
     }
