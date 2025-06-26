@@ -432,5 +432,18 @@ export default function PluginsInclude(updates) {
       await loadPlugin(id);
       window.toast(strings["plugin_enabled"] || "Plugin enabled");
     }
+
+    // Update the plugin object's state
+     const plugin = plugins.installed.find(p => p.id === id);
+     if (plugin) {
+       plugin.enabled = !enabled;
+
+       // Re-render the specific item
+       const $existingItem = $list.installed.get(`[data-id="${id}"]`);
+       if ($existingItem) {
+         const $newItem = <Item {...plugin} />;
+         $existingItem.replaceWith($newItem);
+       }
+     }
   }
 }

@@ -48,7 +48,11 @@ export default async function loadPlugins(loadOnlyTheme = false) {
 		// Load non-theme plugins that aren't loaded yet and are enabled
 		pluginsToLoad = plugins.filter((pluginDir) => {
 			const pluginId = Url.basename(pluginDir.url);
-			return !isThemePlugin(pluginId) && !loadedPlugins.has(pluginId) && enabledMap[pluginId] !== true;
+			return (
+				!isThemePlugin(pluginId) &&
+				!loadedPlugins.has(pluginId) &&
+				enabledMap[pluginId] !== true
+			);
 		});
 	}
 

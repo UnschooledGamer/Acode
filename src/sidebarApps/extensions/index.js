@@ -3,19 +3,19 @@ import "./style.scss";
 import ajax from "@deadlyjack/ajax";
 import collapsableList from "components/collapsableList";
 import Sidebar from "components/sidebar";
+import alert from "dialogs/alert";
 import prompt from "dialogs/prompt";
 import select from "dialogs/select";
 import fsOperation from "fileSystem";
 import purchaseListener from "handlers/purchase";
 import constants from "lib/constants";
 import InstallState from "lib/installState";
+import loadPlugin from "lib/loadPlugin";
 import settings from "lib/settings";
 import FileBrowser from "pages/fileBrowser";
 import plugin from "pages/plugin";
 import Url from "utils/Url";
 import helpers from "utils/helpers";
-import alert from "dialogs/alert";
-import loadPlugin from "lib/loadPlugin";
 
 /** @type {HTMLElement} */
 let $installed = null;
@@ -386,7 +386,14 @@ function ListItem({ icon, name, id, version, downloads, installed, source }) {
 	const disabledMap = settings.value.pluginsDisabled || {};
 	const enabled = disabledMap[id] !== true;
 	const $el = (
-		<div data-plugin-id={id} data-plugin-enabled={enabled !== false} className="tile" style={enabled === false ? { opacity: 0.5, filter: 'grayscale(0.7)' } : {}}>
+		<div
+			data-plugin-id={id}
+			data-plugin-enabled={enabled !== false}
+			className="tile"
+			style={
+				enabled === false ? { opacity: 0.5, filter: "grayscale(0.7)" } : {}
+			}
+		>
 			<span className="icon" style={{ backgroundImage: `url(${icon})` }} />
 			<span
 				className="text sub-text"
@@ -601,8 +608,10 @@ async function more_plugin_action(id, pluginName) {
 	if (pluginSettings) {
 		actions.push(strings.settings);
 	}
-	
-	actions.push(enabled ? (strings.disable || "Disable") : (strings.enable || "Enable"));
+
+	actions.push(
+		enabled ? strings.disable || "Disable" : strings.enable || "Enable",
+	);
 
 	actions.push(strings.uninstall);
 	const action = await select("Action", actions);
@@ -621,10 +630,9 @@ async function more_plugin_action(id, pluginName) {
 				$installed.ontoggle();
 			}
 			break;
-		case (strings.disable || "Disable"):
-			// fallthrough
-		case (strings.enable || "Enable"):
-
+		case strings.disable || "Disable":
+		// fallthrough
+		case strings.enable || "Enable":
 			if (enabled) {
 				disabledMap[id] = true; // Disabling
 			} else {
@@ -638,12 +646,20 @@ async function more_plugin_action(id, pluginName) {
 				strings.info,
 				[
 					// { value: "reload_plugins", text: strings["reload_plugins"] || "Reload Plugins" },
-					{ value: "restart_app", text: strings["restart_app"] || "Restart App" },
-					{ value: "single", text: enabled ? (strings["disable_plugin"] || "Disable this Plugin") : (strings["enable_plugin"] || "Enable this Plugin") },
+					{
+						value: "restart_app",
+						text: strings["restart_app"] || "Restart App",
+					},
+					{
+						value: "single",
+						text: enabled
+							? strings["disable_plugin"] || "Disable this Plugin"
+							: strings["enable_plugin"] || "Enable this Plugin",
+					},
 				],
-				 {
-					default: "single"
-				 }
+				{
+					default: "single",
+				},
 			);
 
 			// if (choice === "reload_plugins") {
