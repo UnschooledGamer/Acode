@@ -44,7 +44,7 @@ export default function Item({
       className="list-item"
       data-action="open"
       data-installed={(!!installed).toString()}
-      style={enabled === false ? { opacity: 0.5, filter: 'grayscale(0.7)' } : {}}
+      style={enabled === false ? { opacity: 0.6 } : {}}
     >
       <div className="plugin-header">
         <div className="plugin-icon">

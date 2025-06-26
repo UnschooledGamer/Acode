@@ -390,9 +390,7 @@ function ListItem({ icon, name, id, version, downloads, installed, source }) {
 			data-plugin-id={id}
 			data-plugin-enabled={enabled !== false}
 			className="tile"
-			style={
-				enabled === false ? { opacity: 0.5, filter: "grayscale(0.7)" } : {}
-			}
+			style={enabled === false ? { opacity: 0.6 } : {}}
 		>
 			<span className="icon" style={{ backgroundImage: `url(${icon})` }} />
 			<span
@@ -681,6 +679,12 @@ async function more_plugin_action(id, pluginName) {
 				} else {
 					await loadPlugin(id);
 					window.toast(strings["plugin_enabled"] || "Plugin enabled");
+				}
+				if (!$explore.collapsed) {
+					$explore.ontoggle();
+				}
+				if (!$installed.collapsed) {
+					$installed.ontoggle();
 				}
 			}
 			break;
