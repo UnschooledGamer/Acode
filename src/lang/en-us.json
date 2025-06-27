@@ -408,5 +408,6 @@
 	"plugin_enabled": "Plugin enabled",
 	"plugin_disabled": "Plugin disabled",
 	"enable_plugin": "Enable this Plugin",
-	"disable_plugin": "Disable this Plugin"
+	"disable_plugin": "Disable this Plugin",
+	"open_source": "Open Source"
 }

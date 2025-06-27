@@ -407,5 +407,6 @@
 	"plugin_enabled": "Plugin activé",
 	"plugin_disabled": "Plugin désactivé",
 	"enable_plugin": "Activer ce plugin",
-	"disable_plugin": "Désactiver ce plugin"
+	"disable_plugin": "Désactiver ce plugin",
+	"open_source": "Open Source"
 }

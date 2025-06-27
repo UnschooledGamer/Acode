@@ -408,5 +408,6 @@
 	"plugin_enabled": "הפלאגין הופעל",
 	"plugin_disabled": "הפלאגין הושבת",
 	"enable_plugin": "הפעל תוסף זה",
-	"disable_plugin": "השבת תוסף זה"
+	"disable_plugin": "השבת תוסף זה",
+	"open_source": "Open Source"
 }

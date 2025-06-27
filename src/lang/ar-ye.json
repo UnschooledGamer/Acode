@@ -407,5 +407,6 @@
 	"plugin_enabled": "تم تفعيل الإضافة",
 	"plugin_disabled": "تم تعطيل الإضافة",
 	"enable_plugin": "تفعيل هذه الإضافة",
-	"disable_plugin": "تعطيل هذه الإضافة"
+	"disable_plugin": "تعطيل هذه الإضافة",
+	"open_source": "Open Source"
 }

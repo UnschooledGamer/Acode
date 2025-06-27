@@ -408,5 +408,6 @@
 	"plugin_enabled": "Plugin diaktifkan",
 	"plugin_disabled": "Plugin dinonaktifkan",
 	"enable_plugin": "Aktifkan Plugin ini",
-	"disable_plugin": "Nonaktifkan Plugin ini"
+	"disable_plugin": "Nonaktifkan Plugin ini",
+	"open_source": "Open Source"
 }
