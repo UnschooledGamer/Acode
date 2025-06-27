@@ -125,9 +125,11 @@
             .plugin-meta-dot {
               width: 3px;
               height: 3px;
-              background: color-mix(in srgb,
-                  var(--secondary-text-color) 80%,
-                  black);
+              background: color-mix(
+                in srgb,
+                var(--secondary-text-color) 80%,
+                black
+              );
               border-radius: 50%;
               display: inline-block;
             }
@@ -184,6 +186,8 @@
       min-width: 100px;
       pointer-events: auto !important;
       position: relative;
+      margin-left: auto;
+      justify-content: flex-end;
     }
 
     .plugin-toggle-track {
