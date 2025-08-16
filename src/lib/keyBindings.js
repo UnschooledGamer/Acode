@@ -435,7 +435,7 @@ export default {
 		key: "Ctrl-Alt-F",
 		readOnly: false,
 		editorOnly: true,
-		action: "format"
+		action: "format",
 	},
 	replaymacro: {
 		description: "Replay macro",
