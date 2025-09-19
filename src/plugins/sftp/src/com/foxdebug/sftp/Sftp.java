@@ -33,6 +33,7 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.channels.UnresolvedAddressException;
 import java.nio.charset.StandardCharsets;
+import java.security.Security;
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.CordovaPlugin;
@@ -40,6 +41,8 @@ import org.apache.cordova.CordovaWebView;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import java.util.Arrays;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 public class Sftp extends CordovaPlugin {
 
@@ -178,7 +181,12 @@ public class Sftp extends CordovaPlugin {
               ContentResolver contentResolver = context.getContentResolver();
               InputStream in = contentResolver.openInputStream(uri);
 
+              com.sshtools.common.logger.Log.getDefaultContext().enableFile(com.sshtools.common.logger.Log.Level.DEBUG, new File("/storage/emulated/0/Android/data/com.foxdebug.acode/synergy.log"));
               JCEProvider.enableBouncyCastle(true);
+
+              Log.i(TAG, "All Available Security Providers (Security.getProviders() : " + Arrays.toString(Security.getProviders()));
+              Log.i(TAG, "All Available Security Providers for ED25519 (Security.getProviders(\"KeyPairGenerator.Ed25519\"\") : " + Arrays.toString(Security.getProviders("KeyPairGenerator.Ed25519")));
+              Log.i(TAG, "BC Security Provider Name (`Security.getProvider(BouncyCastleProvider.PROVIDER_NAME)`) : " + Security.getProvider(BouncyCastleProvider.PROVIDER_NAME));
 
               SshKeyPair keyPair = null;
               try {
