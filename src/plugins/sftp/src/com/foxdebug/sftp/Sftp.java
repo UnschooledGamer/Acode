@@ -185,7 +185,7 @@ public class Sftp extends CordovaPlugin {
 //            the absolute path to application-specific directory. May return *null* if shared storage is not currently available.
               File appDataDirectory = context.getExternalFilesDir(null);
               if (appDataDirectory != null) {
-                com.sshtools.common.logger.Log.getDefaultContext().enableFile(com.sshtools.common.logger.Log.Level.DEBUG, new File(appDataDirectory + "synergy.log"));
+                com.sshtools.common.logger.Log.getDefaultContext().enableFile(com.sshtools.common.logger.Log.Level.DEBUG, new File(appDataDirectory,"synergy.log"));
               }
 //            JCEProvider.enableBouncyCastle(false);
 
