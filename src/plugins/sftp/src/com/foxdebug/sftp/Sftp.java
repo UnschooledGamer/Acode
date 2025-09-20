@@ -181,8 +181,13 @@ public class Sftp extends CordovaPlugin {
               ContentResolver contentResolver = context.getContentResolver();
               InputStream in = contentResolver.openInputStream(uri);
 
-              com.sshtools.common.logger.Log.getDefaultContext().enableFile(com.sshtools.common.logger.Log.Level.DEBUG, new File("/storage/emulated/0/Android/data/com.foxdebug.acode/synergy.log"));
-//               JCEProvider.enableBouncyCastle(false);
+//            for `appDataDirectory`, Ref: https://developer.android.com/reference/android/content/Context#getExternalFilesDir(java.lang.String)
+//            the absolute path to application-specific directory. May return *null* if shared storage is not currently available.
+              File appDataDirectory = context.getExternalFilesDir(null);
+              if (appDataDirectory != null) {
+                com.sshtools.common.logger.Log.getDefaultContext().enableFile(com.sshtools.common.logger.Log.Level.DEBUG, new File(appDataDirectory + "synergy.log"));
+              }
+//            JCEProvider.enableBouncyCastle(false);
 
               Log.i(TAG, "All Available Security Providers (Security.getProviders() : " + Arrays.toString(Security.getProviders()));
               Log.i(TAG, "All Available Security Providers for ED25519 (Security.getProviders(\"KeyPairGenerator.Ed25519\"\") : " + Arrays.toString(Security.getProviders("KeyPairGenerator.Ed25519")));
