@@ -18,7 +18,10 @@
 
       steps:
         - name: Fast Fail if secrets are missing
-          if: ${{ secrets.KEYSTORE_CONTENT == '' || secrets.BUILD_JSON_CONTENT == '' }}
+          if: ${{ env.KEYSTORE_CONTENT == '' || env.BUILD_JSON_CONTENT == '' }}
+          env:
+             KEYSTORE_CONTENT: ${{ secrets.KEYSTORE_CONTENT }} 
+             BUILD_JSON_CONTENT: ${{ secrets.BUILD_JSON_CONTENT }} 
           run: |
             echo "::error title=Missing Secrets::KEYSTORE_CONTENT or BUILD_JSON_CONTENT secrets are missing! Aborting workflow."
             exit 1
