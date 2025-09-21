@@ -39,6 +39,7 @@
           with:
             distribution: 'temurin'
             java-version: '21'
+            cache: 'gradle'
 
         - name: Set up Node.js
           uses: actions/setup-node@v4
@@ -48,7 +49,7 @@
         - name: Add keystore and build.json from secrets
           run: |
             echo "${{ secrets.KEYSTORE_CONTENT }}" | base64 -d > $STORE_FILE_PATH
-            echo "${{ secrets.BUILD_JSON_CONTENT }}" > $BUILD_JSON_PATH
+            echo "${{ secrets.BUILD_JSON_CONTENT }}" | base64 -d > $BUILD_JSON_PATH
             echo "Keystore and build.json added successfully."
 
         - name: Export Commit Hash
