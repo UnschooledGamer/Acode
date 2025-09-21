@@ -9,6 +9,9 @@
         - nightly
     workflow_dispatch:
 
+  env:
+    STORE_FILE_PATH: /tmp/app-debug.keystore
+    BUILD_JSON_PATH: build.json
 
   jobs:
     build:
@@ -44,8 +47,8 @@
 
         - name: Add keystore and build.json from secrets
           run: |
-            echo "${{ secrets.KEYSTORE_CONTENT }}" | base64 -d > $STORE_FILE
-            echo "${{ secrets.BUILD_JSON_CONTENT }}" > $BUILD_JSON
+            echo "${{ secrets.KEYSTORE_CONTENT }}" | base64 -d > $STORE_FILE_PATH
+            echo "${{ secrets.BUILD_JSON_CONTENT }}" > $BUILD_JSON_PATH
             echo "Keystore and build.json added successfully."
 
         - name: Export Commit Hash
@@ -92,6 +95,11 @@
             name: app-debug-${{ env.GIT_COMMIT }}
             path: platforms/app/build/outputs/apk/debug/app-debug.apk
 
+        - name: remove keystore and build.json
+          run: |
+            rm $STORE_FILE_PATH $BUILD_JSON_PATH
+            echo "Keystore and build.json removed successfully."
+        
         - name: Check Nightly Tag and Force Update
           if: github.event_name == 'push' && contains(github.event.ref, 'tags/nightly') == false
           run: |
