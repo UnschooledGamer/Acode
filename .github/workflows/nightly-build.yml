@@ -94,7 +94,7 @@
           uses: actions/upload-artifact@v4
           with:
             name: app-debug-${{ env.GIT_COMMIT }}
-            path: platforms/app/build/outputs/apk/debug/app-debug.apk
+            path: platforms/android/app/build/outputs/apk/debug/app-debug.apk
 
         - name: remove keystore and build.json
           run: |
@@ -102,7 +102,7 @@
             echo "Keystore and build.json removed successfully."
         
         - name: Check Nightly Tag and Force Update
-          if: github.event_name == 'push' && contains(github.event.ref, 'tags/nightly') == false
+          #if: github.event_name == 'push' && contains(github.event.ref, 'tags/nightly') == false
           run: |
             # Check if the nightly tag exists and get the commit it points to
             if git show-ref --quiet refs/tags/nightly; then
