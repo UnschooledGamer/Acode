@@ -1,0 +1,107 @@
+  name: Nightly Build
+
+  on:
+    schedule:
+      # Fire every day at 7:00am UTC (Roughly before EU workday and after US workday)
+      - cron: "0 7 * * *"
+    push:
+      tags:
+        - nightly
+
+  jobs:
+    build:
+      timeout-minutes: 60
+      runs-on: ubuntu-latest
+
+      steps:
+        - name: Fast Fail if secrets are missing
+          if: ${{ secrets.KEYSTORE_CONTENT == '' || secrets.BUILD_JSON_CONTENT == '' }}
+          run: |
+            echo "::error title=Missing Secrets::KEYSTORE_CONTENT or BUILD_JSON_CONTENT secrets are missing! Aborting workflow."
+            exit 1
+
+        - name: Checkout Repository
+          uses: actions/checkout@v4
+          with:
+            fetch-depth: 0 # Required for tags
+
+        - name: Set up Java 21
+          uses: actions/setup-java@v4
+          with:
+            distribution: 'temurin'
+            java-version: '21'
+
+        - name: Set up Node.js
+          uses: actions/setup-node@v4
+          with:
+            node-version: 'lts/*' # or '18.x' for latest stable
+
+        - name: Add keystore and build.json from secrets
+          run: |
+            echo "${{ secrets.KEYSTORE_CONTENT }}" | base64 -d > $STORE_FILE
+            echo "${{ secrets.BUILD_JSON_CONTENT }}" > $BUILD_JSON
+            echo "Keystore and build.json added successfully."
+
+        - name: Export Commit Hash
+          run: echo "GIT_COMMIT=$(git rev-parse HEAD)" >> $GITHUB_ENV
+
+        - name: Extract versionCode and version from config.xml
+          id: extract_version
+          run: |
+            if [ ! -f config.xml ]; then
+            echo "config.xml not found!"
+            exit 1
+            fi
+            VERSION_CODE=$(grep 'versionCode=' config.xml | sed -E 's/.*versionCode="([0-9]+)".*/\1/')
+            VERSION=$(grep -oP 'version="\K[0-9.]+' config.xml)
+            echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_OUTPUT
+            echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+            echo "Extracted Version Code: $VERSION_CODE"
+            echo "Extracted Version: $VERSION"
+
+        - name: Append Commit Hash to Version and Update config.xml
+          run: |
+            SHORT_COMMIT_HASH=$(echo "${{ env.GIT_COMMIT }}" | cut -c 1-7)
+            UPDATED_VERSION="${{ steps.extract_version.outputs.VERSION }}-${SHORT_COMMIT_HASH}"
+            echo "Updated Version: $UPDATED_VERSION"
+            
+            # Update config.xml with the new version
+            sed -i "s/version=\"${{ steps.extract_version.outputs.VERSION }}\"/version=\"$UPDATED_VERSION\"/g" config.xml
+            echo "Updated version in config.xml"
+            # Output the updated version
+            echo "UPDATED_VERSION=$UPDATED_VERSION" >> $GITHUB_ENV
+
+        - name: Install Node.js Packages
+          run: npm install
+
+        - name: Run npm setup
+          run: npm run setup
+
+        - name: Run npm build paid dev apk
+          run: npm run build paid dev apk
+
+        - name: Upload APK Artifact
+          uses: actions/upload-artifact@v4
+          with:
+            name: app-debug-${{ env.GIT_COMMIT }}
+            path: platforms/app/build/outputs/apk/debug/app-debug.apk
+
+        - name: Check Nightly Tag and Force Update
+          if: github.event_name == 'push' && contains(github.event.ref, 'tags/nightly') == false
+          run: |
+            # Check if the nightly tag exists and get the commit it points to
+            if git show-ref --quiet refs/tags/nightly; then
+              TAG_COMMIT=$(git rev-parse nightly)
+            else
+              TAG_COMMIT=""
+            fi
+            
+            # If the current commit is the same as the tag, skip updating the tag
+            if [ "$TAG_COMMIT" != "${{ env.GIT_COMMIT }}" ]; then
+              git config --global user.name 'GitHub Actions'
+              git config --global user.email 'github-actions@github.com'
+              git tag -f nightly
+              git push origin nightly --force
+            else
+              echo "Nightly tag already points to this commit. Skipping update."
+            fi
