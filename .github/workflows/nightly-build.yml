@@ -12,6 +12,7 @@
     build:
       timeout-minutes: 60
       runs-on: ubuntu-latest
+      # if: github.repository_owner == 'Acode-Foundation'
 
       steps:
         - name: Fast Fail if secrets are missing
