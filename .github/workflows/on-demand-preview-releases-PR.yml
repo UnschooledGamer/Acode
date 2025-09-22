@@ -66,7 +66,7 @@ jobs:
   update_Last_Comment:
       needs: [job_trigger,trigger_builder]
       runs-on: ubuntu-latest
-      if: ${{ jobs.trigger_builder.result == 'failure' }}
+      if: ${{ needs.trigger_builder.result }}
       steps:
         - name: Update Last Comment by bot (if Workflow Triggering failed)
 

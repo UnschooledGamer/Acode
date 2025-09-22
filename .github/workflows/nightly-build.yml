@@ -17,6 +17,10 @@
           required: true
           type: number
           description: The Pull Request that triggered this workflow
+      outputs:
+        job_result:
+          description: "Build job result"
+          value: ${{ jobs.build.result }}
 
     workflow_dispatch:
 
