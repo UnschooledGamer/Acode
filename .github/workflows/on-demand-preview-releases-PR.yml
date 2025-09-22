@@ -48,6 +48,8 @@ jobs:
 
       - name: Add comment to PR
         run: |
+            git config --global user.name 'GitHub Actions'
+            git config --global user.email 'github-actions@github.com'
             gh pr comment $PR --body "⚒️ Starting a workflow to build, Your On-Demand Preview Release/build for ${{ github.event.pull_request.url }}. \n\n status: **\`🟡 in_progress\`** \n\n Kindly wait, this message will be updated with success or failure status."
         env:
           PR: ${{ github.event.pull_request.number }}
@@ -56,7 +58,7 @@ jobs:
       - name: Trigger Nightly Release Builder Workflow
         id: nightly_release_builder
         continue-on-error: true
-        uses: ./.github/workflows/nightly-build.yml@ci/nightly-builds
+        uses: ./.github/workflows/nightly-build.yml
         with:
           is_PR: true
           PR_NUMBER: ${{ github.event.pull_request.number }}
@@ -66,6 +68,8 @@ jobs:
 #        ".outcome" -> result of a completed step before continue-on-error is applied
         if: steps.nightly_release_builder.outcome == 'failure'
         run: |
+          git config --global user.name 'GitHub Actions'
+          git config --global user.email 'github-actions@github.com'
           gh pr comment --edit-last $PR --body "🔴 (Workflow Trigger failure), Your On-Demand Preview Release/build for ${{ github.event.pull_request.url}}. \n\n status: **\`🔴 failed\`** \n For Owners: Please check the workflow at https://${{ github.server_url }}/${{ github.repository}}/actions"
         env:
           PR: ${{ github.event.pull_request.number }}
