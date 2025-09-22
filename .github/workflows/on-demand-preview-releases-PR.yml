@@ -55,15 +55,16 @@ jobs:
 
       - name: Trigger Nightly Release Builder Workflow
         id: nightly_release_builder
+        continue-on-error: true
         uses: ./.github/workflows/nightly-build.yml@ci/nightly-builds
         with:
           is_PR: true
           PR_NUMBER: ${{ github.event.pull_request.number }}
 
-        continue-on-error: true
 
       - name: Update Last Comment by bot (if Workflow Triggering failed)
-        if: failure()
+#        ".outcome" -> result of a completed step before continue-on-error is applied
+        if: steps.nightly_release_builder.outcome == 'failed'
         run: |
           gh pr comment --edit-last $PR --body "🔴 (Workflow Trigger failure), Your On-Demand Preview Release/build for ${{ github.event.pull_request.url}}. \n\n status: **`🔴 failed`** \n For Owners: Please check the workflow at https://${{ github.server_url }}/${{ github.repository}}/actions"
         env:
