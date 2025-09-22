@@ -31,9 +31,20 @@ jobs:
     # if: github.repository_owner == 'Acode-Foundation'
 
     steps:
+      - name: Remove Manually added PR Label
+        if: |
+          contains(github.event.pull_request.labels.*.name, 'CI: RUN ON-DEMAND PREVIEW RELEASES')
+
+        run: gh pr edit $PR --remove-label "$labels"
+        env:
+           PR: ${{ github.event.pull_request.number }}
+           labels: 'CI: RUN ON-DEMAND PREVIEW RELEASES'
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Trigger Nightly Release Builder Workflow
         uses: ./.github/workflows/.github/workflows/nightly-build.yml@ci/nightly-builds
         with:
           is_PR: true
           PR_NUMBER: ${{ github.event.pull_request.number }}
 
+        continue-on-error: true
