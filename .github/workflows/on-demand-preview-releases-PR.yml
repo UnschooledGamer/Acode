@@ -46,10 +46,20 @@ jobs:
            labels: 'CI: RUN ON-DEMAND PREVIEW RELEASES'
            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Add comment to PR
+        run: |
+            gh pr comment ${{ github.event.pull_request.number }} --body "⚒️ Starting a workflow to build, Your On-Demand Preview Release/build for ${{ github.event.pull_request.url}}. \n\n status: **`🟡 in_progress`** \n\n Kindly wait, this message will be updated with success or failure status."
+
       - name: Trigger Nightly Release Builder Workflow
+        id: nightly_release_builder
         uses: ./.github/workflows/nightly-build.yml@ci/nightly-builds
         with:
           is_PR: true
           PR_NUMBER: ${{ github.event.pull_request.number }}
 
         continue-on-error: true
+
+      - name: Update Last Comment by bot (if Workflow Triggering failed)
+        if: failure()
+        run: |
+          gh pr comment --edit-last ${{ github.event.pull_request.number }} --body "🔴 (Workflow Trigger failure), Your On-Demand Preview Release/build for ${{ github.event.pull_request.url}}. \n\n status: **`🔴 failed`** \n For Owners: Please check the workflow at https://${{ github.server_url }}/${{ github.repository}}/actions"
