@@ -66,10 +66,9 @@ jobs:
   update_Last_Comment:
       needs: [job_trigger,trigger_builder]
       runs-on: ubuntu-latest
-      if: jobs.trigger_builder.result == 'failure'
+      if: ${{ jobs.trigger_builder.result == 'failure' }}
       steps:
         - name: Update Last Comment by bot (if Workflow Triggering failed)
-#        ".outcome" -> result of a completed step before continue-on-error is applied
 
           run: |
             git config --global user.name 'GitHub Actions'
