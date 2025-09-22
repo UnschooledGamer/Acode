@@ -88,7 +88,7 @@
             if ${{ inputs.is_PR  || false }}; then 
               PR_NUMBER=${{ inputs.PR_NUMBER }}
             else
-              PR_NUMBER=false
+              PR_NUMBER=
             fi
             UPDATED_VERSION="${{ steps.extract_version.outputs.VERSION }}-${{ env.VERSION_LABEL }}.${PR_NUMBER:-$SHORT_COMMIT_HASH}"
             echo "Updated Version: $UPDATED_VERSION"
