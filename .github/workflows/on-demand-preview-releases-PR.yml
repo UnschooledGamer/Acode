@@ -47,7 +47,7 @@ jobs:
            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Trigger Nightly Release Builder Workflow
-        uses: ./.github/workflows/.github/workflows/nightly-build.yml@ci/nightly-builds
+        uses: ./.github/workflows/nightly-build.yml@ci/nightly-builds
         with:
           is_PR: true
           PR_NUMBER: ${{ github.event.pull_request.number }}
