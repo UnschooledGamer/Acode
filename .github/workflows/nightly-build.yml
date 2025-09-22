@@ -85,7 +85,7 @@
         - name: Append Commit Hash to Version and Update config.xml
           run: |
             SHORT_COMMIT_HASH=$(echo "${{ env.GIT_COMMIT }}" | cut -c 1-7)
-            if ${{ inputs.is_PR }} || false; then 
+            if ${{ inputs.is_PR  || false }}; then 
               PR_NUMBER=${{ inputs.PR_NUMBER }}
             else
               PR_NUMBER=false
