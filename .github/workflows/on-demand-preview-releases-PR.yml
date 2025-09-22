@@ -69,6 +69,12 @@ jobs:
       runs-on: ubuntu-latest
       if: ${{ needs.trigger_builder.result }}
       steps:
+        - name: Checkout code
+          uses: actions/checkout@v4
+          with:
+            clean: false
+            fetch-depth: 0
+
         - name: Update Last Comment by bot (if Workflow Triggering failed)
 
           run: |

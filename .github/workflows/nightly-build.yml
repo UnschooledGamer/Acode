@@ -130,6 +130,7 @@
         
         - name: Check Nightly Tag and Force Update
           #if: github.event_name == 'push' && contains(github.event.ref, 'tags/nightly') == false
+          if: github.event_name != 'workflow_call'
           run: |
             # Check if the nightly tag exists and get the commit it points to
             if git show-ref --quiet refs/tags/nightly; then
@@ -164,7 +165,7 @@
               \n\n[Compare Changes](https://github.com/${{ github.repository }}/compare/${{ env.PREV_TAG }}...${{ github.sha }})
 
         - name: Update Last Comment by bot (If ran in PR)
-          if: github.event_name == 'workflow_call' && inputs.is_PR || false
+          if: github.event_name == 'workflow_call' && (inputs.is_PR || false)
           run:
             |
             gh pr comment ${{ inputs.PR_NUMBER }} --edit-last --body "Your Preview Release for this, Has been built \n\n [Click here to view that github actions build](https://github.com/${{ github.repository}}/actions/runs/${{ github.run_id }})/"
