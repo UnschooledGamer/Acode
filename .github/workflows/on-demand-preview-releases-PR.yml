@@ -1,0 +1,39 @@
+name: On Demand Preview Releases for PR
+#  avoids paths like .md, and anything in .github folder
+on:
+  pull_request:
+    paths-ignore:
+      - '!*.md'
+      - '.github/**'
+    types: [labeled, synchronize]
+
+
+permissions:
+  contents: write
+  pull-requests: write
+  # All Pull Requests are issues, but not all issues are Pull Requests (like GitHub says 🙃)
+  issues: write
+
+concurrency:
+  # Allow only one workflow per any non-`main` branch.
+  group: ${{ github.workflow }}-${{ github.ref_name }}-${{ github.ref_name == 'main' && github.sha || 'anysha' }}
+  cancel-in-progress: true
+
+jobs:
+  job_trigger:
+    name: Trigger Preview Release (if conditions met)
+    if: |
+      (!contains(github.event.pull_request.labels.*.name, 'DO NOT PREVIEW RELEASE') 
+      || contains(github.event.pull_request.labels.*.name, 'Bypass check - PREVIEW RELEASE') 
+      || contains(github.event.pull_request.labels.*.name, 'CI: RUN ON-DEMAND PREVIEW RELEASES'))
+
+    runs-on: ubuntu-latest
+    # if: github.repository_owner == 'Acode-Foundation'
+
+    steps:
+      - name: Trigger Nightly Release Builder Workflow
+        uses: ./.github/workflows/.github/workflows/nightly-build.yml@ci/nightly-builds
+        with:
+          is_PR: true
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+
