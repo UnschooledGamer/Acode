@@ -85,7 +85,7 @@
         - name: Append Commit Hash to Version and Update config.xml
           run: |
             SHORT_COMMIT_HASH=$(echo "${{ env.GIT_COMMIT }}" | cut -c 1-7)
-            if ${{ inputs.is_PR }}; then 
+            if ${{ inputs.is_PR }} || false; then 
               PR_NUMBER=${{ inputs.PR_NUMBER }}
             else
               PR_NUMBER=false
@@ -155,7 +155,7 @@
               \n\n[Compare Changes](https://github.com/${{ github.repository }}/compare/${{ env.PREV_TAG }}...${{ github.sha }})
 
         - name: Update Last Comment by bot (If ran in PR)
-          if: github.event_name == 'workflow_call' && inputs.is_PR
+          if: github.event_name == 'workflow_call' && inputs.is_PR || false
           run:
             |
             gh pr comment ${{ inputs.PR_NUMBER }} --edit-last --body "Your Preview Release for this, Has been built \n\n [Click here to view that github actions build](https://github.com/${{ github.repository}}/actions/runs/${{ github.run_id }})/"
