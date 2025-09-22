@@ -66,7 +66,7 @@
         - name: Export Commit Hash & prev tag
           run: |
             echo "GIT_COMMIT=$(git rev-parse HEAD)" >> $GITHUB_ENV
-            echo "PREV_TAG=$(git describe --tags --abbrev=0 || git rev-list --max-parents=0 HEAD)
+            echo "PREV_TAG=$(git describe --tags --abbrev=0 || git rev-list --max-parents=0 HEAD)" >> $GITHUB_ENV
 
         - name: Extract versionCode and version from config.xml
           id: extract_version
