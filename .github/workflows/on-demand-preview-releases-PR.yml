@@ -31,6 +31,11 @@ jobs:
     # if: github.repository_owner == 'Acode-Foundation'
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: '1'
+
       - name: Remove Manually added PR Label
         if: |
           contains(github.event.pull_request.labels.*.name, 'CI: RUN ON-DEMAND PREVIEW RELEASES')
