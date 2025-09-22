@@ -90,7 +90,7 @@
             else
               PR_NUMBER=false
             fi
-            UPDATED_VERSION="${{ steps.extract_version.outputs.VERSION }}-${{ env.VERSION_LABEL }}.${PR_NUMBER || SHORT_COMMIT_HASH}"
+            UPDATED_VERSION="${{ steps.extract_version.outputs.VERSION }}-${{ env.VERSION_LABEL }}.${PR_NUMBER:-$SHORT_COMMIT_HASH}"
             echo "Updated Version: $UPDATED_VERSION"
             
             # Update config.xml with the new version
