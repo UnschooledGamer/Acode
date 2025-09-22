@@ -64,7 +64,7 @@ jobs:
 
       - name: Update Last Comment by bot (if Workflow Triggering failed)
 #        ".outcome" -> result of a completed step before continue-on-error is applied
-        if: steps.nightly_release_builder.outcome == 'failed'
+        if: steps.nightly_release_builder.outcome == 'failure'
         run: |
           gh pr comment --edit-last $PR --body "🔴 (Workflow Trigger failure), Your On-Demand Preview Release/build for ${{ github.event.pull_request.url}}. \n\n status: **`🔴 failed`** \n For Owners: Please check the workflow at https://${{ github.server_url }}/${{ github.repository}}/actions"
         env:
