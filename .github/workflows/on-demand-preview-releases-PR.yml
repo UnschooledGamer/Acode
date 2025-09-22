@@ -56,22 +56,25 @@ jobs:
           PR: ${{ github.event.pull_request.number }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Trigger Nightly Release Builder Workflow
-        id: nightly_release_builder
-        continue-on-error: true
-        uses: unschooledgamer/acode/.github/workflows/nightly-build.yml@d651aa4a72cde52e5f59fcd5f50a6f4a8766b9f2
-        with:
-          is_PR: true
-          PR_NUMBER: ${{ github.event.pull_request.number }}
+  trigger_builder:
+      needs: job_trigger
+      uses: unschooledgamer/acode/.github/workflows/nightly-build.yml@d651aa4a72cde52e5f59fcd5f50a6f4a8766b9f2
+      with:
+        is_PR: true
+        PR_NUMBER: ${{ github.event.pull_request.number }}
 
-
-      - name: Update Last Comment by bot (if Workflow Triggering failed)
+  update_Last_Comment:
+      needs: [job_trigger,trigger_builder]
+      runs-on: ubuntu-latest
+      if: jobs.trigger_builder.result == 'failure'
+      steps:
+        - name: Update Last Comment by bot (if Workflow Triggering failed)
 #        ".outcome" -> result of a completed step before continue-on-error is applied
-        if: steps.nightly_release_builder.outcome == 'failure'
-        run: |
-          git config --global user.name 'GitHub Actions'
-          git config --global user.email 'github-actions@github.com'
-          gh pr comment --edit-last $PR --body "🔴 (Workflow Trigger failure), Your On-Demand Preview Release/build for ${{ github.event.pull_request.url}}. \n\n status: **\`🔴 failed\`** \n For Owners: Please check the workflow at https://${{ github.server_url }}/${{ github.repository}}/actions"
-        env:
-          PR: ${{ github.event.pull_request.number }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+          run: |
+            git config --global user.name 'GitHub Actions'
+            git config --global user.email 'github-actions@github.com'
+            gh pr comment --edit-last $PR --body "🔴 (Workflow Trigger failure), Your On-Demand Preview Release/build for ${{ github.event.pull_request.url}}. \n\n status: **\`🔴 failed\`** \n For Owners: Please check the workflow at https://${{ github.server_url }}/${{ github.repository}}/actions"
+          env:
+            PR: ${{ github.event.pull_request.number }}
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
