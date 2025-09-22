@@ -7,12 +7,23 @@
     push:
       tags:
         - nightly
+    workflow_call:
+      inputs:
+        is_PR:
+          default: false
+          type: boolean
+          description: If a Pull Request has triggered it.
+        PR_NUMBER:
+          required: true
+          type: number
+          description: The Pull Request that triggered this workflow
+
     workflow_dispatch:
 
   env:
     STORE_FILE_PATH: /tmp/app-debug.keystore
     BUILD_JSON_PATH: build.json
-
+    VERSION_LABEL: ${{ (inputs.is_PR && 'pr') || 'nightly' }}
   jobs:
     build:
       timeout-minutes: 60
@@ -39,7 +50,7 @@
           with:
             distribution: 'temurin'
             java-version: '21'
-            cache: 'gradle'
+            cache: ${{ (github.ref == 'refs/heads/main' && 'gradle') || '' }}
 
         - name: Set up Node.js
           uses: actions/setup-node@v4
@@ -52,8 +63,10 @@
             echo "${{ secrets.BUILD_JSON_CONTENT }}" | base64 -d > $BUILD_JSON_PATH
             echo "Keystore and build.json added successfully."
 
-        - name: Export Commit Hash
-          run: echo "GIT_COMMIT=$(git rev-parse HEAD)" >> $GITHUB_ENV
+        - name: Export Commit Hash & prev tag
+          run: |
+            echo "GIT_COMMIT=$(git rev-parse HEAD)" >> $GITHUB_ENV
+            echo "PREV_TAG=$(git describe --tags --abbrev=0 || git rev-list --max-parents=0 HEAD)
 
         - name: Extract versionCode and version from config.xml
           id: extract_version
@@ -72,7 +85,12 @@
         - name: Append Commit Hash to Version and Update config.xml
           run: |
             SHORT_COMMIT_HASH=$(echo "${{ env.GIT_COMMIT }}" | cut -c 1-7)
-            UPDATED_VERSION="${{ steps.extract_version.outputs.VERSION }}-${SHORT_COMMIT_HASH}"
+            if ${{ inputs.is_PR }}; then 
+              PR_NUMBER=${{ inputs.PR_NUMBER }}
+            else
+              PR_NUMBER=false
+            fi
+            UPDATED_VERSION="${{ steps.extract_version.outputs.VERSION }}-${{ env.VERSION_LABEL }}.${PR_NUMBER || SHORT_COMMIT_HASH}"
             echo "Updated Version: $UPDATED_VERSION"
             
             # Update config.xml with the new version
@@ -113,6 +131,8 @@
             
             # If the current commit is the same as the tag, skip updating the tag
             if [ "$TAG_COMMIT" != "${{ env.GIT_COMMIT }}" ]; then
+              echo "releaseRequired=true" >> $GITHUB_ENV
+            
               git config --global user.name 'GitHub Actions'
               git config --global user.email 'github-actions@github.com'
               git tag -f nightly
@@ -120,3 +140,22 @@
             else
               echo "Nightly tag already points to this commit. Skipping update."
             fi
+
+        - name: Release Nightly Version
+#          Only run this step, if not called from another workflow. And a previous step is successful with releasedRequired=true
+          if: github.event_name != 'workflow_call' && (success()) && env.releaseRequired == true
+          uses: softprops/action-gh-release@v2
+          with:
+            prerelease: true
+            name: ${{ env.UPDATED_VERSION }}
+            files: |
+              platforms/android/app/build/outputs/apk/debug/app-debug.apk
+            body: |
+              Automated Nightly (pre-release) Releases for Today
+              \n\n[Compare Changes](https://github.com/${{ github.repository }}/compare/${{ env.PREV_TAG }}...${{ github.sha }})
+
+        - name: Update Last Comment by bot (If ran in PR)
+          if: github.event_name == 'workflow_call' && inputs.is_PR
+          run:
+            |
+            gh pr comment ${{ inputs.PR_NUMBER }} --edit-last --body "Your Preview Release for this, Has been built \n\n [Click here to view that github actions build](https://github.com/${{ github.repository}}/actions/runs/${{ github.run_id }})/"
