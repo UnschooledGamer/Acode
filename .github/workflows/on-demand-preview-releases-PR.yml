@@ -59,7 +59,7 @@ jobs:
       - name: Trigger Nightly Release Builder Workflow
         id: nightly_release_builder
         continue-on-error: true
-        uses: ./.github/workflows/nightly-build.yml
+        uses: ./.github/workflows/nightly-build.yml@d651aa4a72cde52e5f59fcd5f50a6f4a8766b9f2
         with:
           is_PR: true
           PR_NUMBER: ${{ github.event.pull_request.number }}
