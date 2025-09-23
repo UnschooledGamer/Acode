@@ -201,7 +201,7 @@
              message: |
                    Preview Release for this, has been built.
          
-         [Click here to view that github actions build](https://github.com/${{ github.repository}}/actions/runs/${{ github.run_id }})/
+                   [Click here to view that github actions build](https://github.com/${{ github.repository}}/actions/runs/${{ github.run_id }})/
              
 
     community-release-notifier:
