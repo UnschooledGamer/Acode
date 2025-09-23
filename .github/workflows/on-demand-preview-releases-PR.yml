@@ -94,6 +94,7 @@ jobs:
              header: on-demand-build-status
              message: |
                    🔴 (Workflow Trigger stopped), Your On-Demand Preview Release/build for ${{ github.event.pull_request.html_url || github.event.pull_request.url }}.
-                   status: **${{ needs.trigger_builder.result || 'failure'}}**            
-
+                   status: **${{ needs.trigger_builder.result || 'failure'}}**         
+               
+                   ---
                    For Owners: Please [Click here to view that github actions](https://github.com/${{ github.repository}}/actions/runs/${{ github.run_id }})
