@@ -47,7 +47,7 @@
       
       outputs:
          release_output: ${{ steps.release.outputs }} 
-         updated_version: ${{ steps.update_version.outputs.UPDATED_VERSION}} 
+         updated_version: ${{ steps.update-version.outputs.UPDATED_VERSION}} 
       steps:
         - name: Fast Fail if secrets are missing
           if: ${{ env.KEYSTORE_CONTENT == '' || env.BUILD_JSON_CONTENT == '' }}
@@ -186,6 +186,7 @@
 
         - name: Release Nightly Version
 #          Only run this step, if not called from another workflow. And a previous step is successful with releasedRequired=true
+          id: release
           if: ${{ ! inputs.skip_tagging_and_releases && success() && env.releaseRequired == 'true' }}
           uses: softprops/action-gh-release@v2
           with:
