@@ -65,11 +65,13 @@
             echo "env: BUILD_JSON_PATH: ${{ env.BUILD_JSON_PATH }}" 
             echo "env: VERSION_LABEL: ${{ env. VERSION_LABEL }}"
             echo "github sha: ${{ github.sha }}" 
+            echo "should not skip tags, releases: ${{ ! inputs.skip_tagging_and_releases }} " 
             echo "::endgroup::" 
             
             echo "## 🚀 Build Type: ${{ env.VERSION_LABEL }}" >> $GITHUB_STEP_SUMMARY
             echo "is_PR: ${{ inputs.is_PR || 'NOT a PR' }}" >> $GITHUB_STEP_SUMMARY
-            echo "PR_NUMBER: ${{ inputs.PR_NUMBER || 'not a PR' }}" >> $GITHUB_STEP_SUMMARY    
+            echo "PR_NUMBER: ${{ inputs.PR_NUMBER || 'not a PR' }}" >> $GITHUB_STEP_SUMMARY
+           echo "should not skip tags, releases: ${{ ! inputs.skip_tagging_and_releases }}" >> $GITHUB_STEP_SUMMARY     
 
         - name: Checkout Repository
           uses: actions/checkout@v4
@@ -207,7 +209,7 @@
     community-release-notifier:
       needs: build
 #      Run only if push tags, or triggered by a schedule
-      if: contains(fromJSON('["push", "schedule"]'), github.event_name)
+      if: contains(fromJSON('["push", "schedule"]'), github.event_name) || ! inputs.skip_tagging_and_releases
       uses: unschooledgamer/acode/.github/workflows/community-release-notifier.yml@8665ebcd59365b0fd81ccf2834d16d7e409b47c3
       secrets:
         DISCORD_WEBHOOK_RELEASE_NOTES: ${{ secrets.DISCORD_WEBHOOK_RELEASE_NOTES }}
