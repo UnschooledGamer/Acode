@@ -216,7 +216,7 @@
       needs: build
 #      Run only if push tags, or triggered by a schedule
       if: contains(fromJSON('["push", "schedule"]'), github.event_name) || ! inputs.skip_tagging_and_releases
-      uses: unschooledgamer/acode/.github/workflows/community-release-notifier.yml@8665ebcd59365b0fd81ccf2834d16d7e409b47c3
+      uses: unschooledgamer/acode/.github/workflows/community-release-notifier.yml@8aa552de6c051baa50ef31306c0ff3b41e66c43e
       with:
          tag_name: ${{ needs.build.outputs.updated_version }}
          url: ${{ needs.build.outputs.release_output.url }} 
