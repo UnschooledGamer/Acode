@@ -68,7 +68,8 @@ jobs:
   update_Last_Comment:
       needs: [job_trigger,trigger_builder]
       runs-on: ubuntu-latest
-      if: ${{ needs.trigger_builder.result }}
+      if: |
+        ${{ contains(fromJSON('["failure", "cancelled", "skipped"]'), needs.trigger_build.result) }}
       steps:
         - name: Checkout code
           uses: actions/checkout@v4
@@ -83,7 +84,7 @@ jobs:
              hide_classify: "OUTDATED"
              header: on-demand-build-status
              message: |
-                   🔴 (Workflow Trigger failure), Your On-Demand Preview Release/build for ${{ github.event.pull_request.url}}.
-                   status: **\`🔴 failed\`**            
+                   🔴 (Workflow Trigger stopped), Your On-Demand Preview Release/build for ${{ github.event.pull_request.html_url || github.event.pull_request.url }}.
+                   status: **\`${{ needs.trigger_builder.result || 'failure'}}\`**            
 
                    For Owners: Please [Click here to view that github actions](https://github.com/${{ github.repository}}/actions/runs/${{ github.run_id }})/
