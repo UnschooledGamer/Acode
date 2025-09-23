@@ -78,16 +78,18 @@ jobs:
   update_Last_Comment:
       needs: [job_trigger,trigger_builder]
       runs-on: ubuntu-latest
-      if: |
-        ${{ contains(fromJSON('["failure", "cancelled", "skipped"]'), needs.trigger_build.result) }}
+      if: ${{ always() }}
       steps:
-        - name: Checkout code
-          uses: actions/checkout@v4
-          with:
-            clean: false
-            fetch-depth: 0
+        - name: Debug upstream result
+          run: echo "trigger_builder result = '${{ needs.trigger_builder.result }}'"
+#        - name: Checkout code
+#          uses: actions/checkout@v4
+#          with:
+#            clean: false
+#            fetch-depth: 0
 
         - name: Update Last Comment by bot (if Workflow Triggering failed)
+          if: ${{ contains(fromJSON('["failure","cancelled","skipped"]'), needs.trigger_builder.result) }}
           uses: marocchino/sticky-pull-request-comment@v2
           with:
              hide_and_recreate: true
