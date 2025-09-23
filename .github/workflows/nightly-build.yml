@@ -44,7 +44,10 @@
       timeout-minutes: 60
       runs-on: ubuntu-latest
       # if: github.repository_owner == 'Acode-Foundation'
-
+      
+      outputs:
+         release_output: ${{ steps.release.outputs }} 
+         updated_version: ${{ steps.update_version.outputs.UPDATED_VERSION}} 
       steps:
         - name: Fast Fail if secrets are missing
           if: ${{ env.KEYSTORE_CONTENT == '' || env.BUILD_JSON_CONTENT == '' }}
@@ -116,6 +119,7 @@
             echo "Extracted Version: $VERSION"
 
         - name: Append Commit Hash to Version and Update config.xml
+          id: update-version 
           run: |
             SHORT_COMMIT_HASH=$(echo "${{ env.GIT_COMMIT }}" | cut -c 1-7)
             if ${{ inputs.is_PR  || false }}; then 
@@ -131,6 +135,7 @@
             echo "Updated version in config.xml"
             # Output the updated version
             echo "UPDATED_VERSION=$UPDATED_VERSION" >> $GITHUB_ENV
+            echo "UPDATED_VERSION=$UPDATED_VERSION" >> $GITHUB_OUTPUT 
 
         - name: Install Node.js Packages
           run: npm install
@@ -211,5 +216,8 @@
 #      Run only if push tags, or triggered by a schedule
       if: contains(fromJSON('["push", "schedule"]'), github.event_name) || ! inputs.skip_tagging_and_releases
       uses: unschooledgamer/acode/.github/workflows/community-release-notifier.yml@8665ebcd59365b0fd81ccf2834d16d7e409b47c3
+      with:
+         tag_name: ${{ needs.build.outputs.updated_version }}
+         url: ${{ needs.build.outputs.release_output.url }} 
       secrets:
         DISCORD_WEBHOOK_RELEASE_NOTES: ${{ secrets.DISCORD_WEBHOOK_RELEASE_NOTES }}
