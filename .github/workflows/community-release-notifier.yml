@@ -3,6 +3,15 @@ on:
   release:
     types: [ released ]
   workflow_call:
+    inputs:
+       tag_name:
+          required: true
+          description: "Release tag_name"
+          type: 'string' 
+       url: 
+          required: true
+          description: "release URL"
+          type: 'string'
     secrets:
       DISCORD_WEBHOOK_RELEASE_NOTES:
         description: 'Discord Webhook for Notifying Releases to Discord'
