@@ -53,6 +53,7 @@
         - name: Logging & summaries
           run: |
             echo "::group::Logging" 
+            echo "🎯 github trigger event name: ${{ github.event_name }}"
             echo "is_PR: ${{ inputs.is_PR }} "
             echo "PR_NUMBER: ${{ inputs.PR_NUMBER }}" 
             echo "env: STORE_FILE_PATH: ${{ env.STORE_FILE_PATH }}" 
