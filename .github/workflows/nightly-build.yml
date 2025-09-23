@@ -62,7 +62,7 @@
             
             echo "## 🚀 Build Type: ${{ env.VERSION_LABEL }}" >> $GITHUB_STEP_SUMMARY
             echo "is_PR: ${{ inputs.is_PR }}" >> $GITHUB_STEP_SUMMARY
-            echo "PR_NUMBER: \`${{ inputs.PR_NUMBER }\`" >> $GITHUB_STEP_SUMMARY    
+            echo "PR_NUMBER: \`${{ inputs.PR_NUMBER }} \`" >> $GITHUB_STEP_SUMMARY    
 
         - name: Checkout Repository
           uses: actions/checkout@v4
