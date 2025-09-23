@@ -53,8 +53,7 @@
           run: |
             echo "::group::Logging
             echo "is_PR: ${{ inputs.is_PR }} "
-            echo "PR_NUMBER: ${{ inputs.PR_NUMBER }}"
-            #echo "job result var: ${{ jobs.build.result }}" 
+            echo "PR_NUMBER: ${{ inputs.PR_NUMBER }}" 
             echo "(env) STORE_FILE_PATH: ${{ env.STORE_FILE_PATH }}" 
             echo "(env) BUILD_JSON_PATH: ${{ env.BUILD_JSON_PATH }}" 
             echo "(env) VERSION_LABEL: ${{ env. VERSION_LABEL }}"
