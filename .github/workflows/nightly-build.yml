@@ -194,6 +194,6 @@
     community-release-notifier:
       needs: build
       if: github.event_name != 'workflow_call'
-      uses: unschooledgamer/acode/.github/workflows/community-release-notifier.yml
+      uses: unschooledgamer/acode/.github/workflows/community-release-notifier.yml@8665ebcd59365b0fd81ccf2834d16d7e409b47c3
       secrets:
         DISCORD_WEBHOOK_RELEASE_NOTES: ${{ secrets.DISCORD_WEBHOOK_RELEASE_NOTES }}
