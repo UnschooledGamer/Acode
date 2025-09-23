@@ -77,11 +77,13 @@ jobs:
             fetch-depth: 0
 
         - name: Update Last Comment by bot (if Workflow Triggering failed)
+          uses: marocchino/sticky-pull-request-comment@v2
+          with:
+             hide_and_recreate: true
+             hide_classify: "OUTDATED"
+             header: on-demand-build-status
+             message: |
+                   🔴 (Workflow Trigger failure), Your On-Demand Preview Release/build for ${{ github.event.pull_request.url}}.
+                   status: **\`🔴 failed\`**            
 
-          run: |
-            git config --global user.name 'GitHub Actions'
-            git config --global user.email 'github-actions@github.com'
-            gh pr comment --edit-last $PR --body "🔴 (Workflow Trigger failure), Your On-Demand Preview Release/build for ${{ github.event.pull_request.url}}. \n\n status: **\`🔴 failed\`** \n For Owners: Please check the workflow at https://${{ github.server_url }}/${{ github.repository}}/actions"
-          env:
-            PR: ${{ github.event.pull_request.number }}
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                   For Owners: Please [Click here to view that github actions](https://github.com/${{ github.repository}}/actions/runs/${{ github.run_id }})/
