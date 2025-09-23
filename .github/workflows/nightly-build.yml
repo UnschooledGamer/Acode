@@ -33,6 +33,7 @@
     STORE_FILE_PATH: /tmp/app-debug.keystore
     BUILD_JSON_PATH: build.json
     VERSION_LABEL: ${{ (inputs.is_PR && 'pr') || 'nightly' }}
+    DISCORD_RELEASE_NOTIFIER_ENABLED: true
   jobs:
     build:
       timeout-minutes: 60
@@ -189,3 +190,10 @@
           run:
             |
             gh pr comment ${{ inputs.PR_NUMBER }} --edit-last --body "Your Preview Release for this, Has been built \n\n [Click here to view that github actions build](https://github.com/${{ github.repository}}/actions/runs/${{ github.run_id }})/"
+
+    community-release-notifier:
+      needs: build
+      if: github.event_name != 'workflow_call' && env.DISCORD_RELEASE_NOTIFIER_ENABLED
+      uses: unschooledgamer/acode/.github/workflows/community-release-notifier.yml
+      secrets:
+        DISCORD_WEBHOOK_RELEASE_NOTES: ${{ secrets.DISCORD_WEBHOOK_RELEASE_NOTES }}

@@ -1,7 +1,12 @@
 name: community-release-notifier
 on:
   release:
-    types: [released]
+    types: [ released ]
+  workflow_call:
+    secrets:
+      DISCORD_WEBHOOK_RELEASE_NOTES:
+        description: 'Discord Webhook for Notifying Releases to Discord'
+        required: true
 
 jobs:
   discord-release:
