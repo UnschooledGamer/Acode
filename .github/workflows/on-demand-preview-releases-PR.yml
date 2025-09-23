@@ -59,7 +59,7 @@ jobs:
   trigger_builder:
       needs: job_trigger
       secrets: inherit
-      uses: unschooledgamer/acode/.github/workflows/nightly-build.yml@b1a09484dd575b871602a77e59576b234eca47d5
+      uses: unschooledgamer/acode/.github/workflows/nightly-build.yml@3abd838c3411a57029c45c926d92bd6d5b727e10
       with:
         is_PR: true
         PR_NUMBER: ${{ github.event.pull_request.number }}
