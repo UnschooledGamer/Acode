@@ -1,21 +1,27 @@
-
-
-// commandManager.js
-import {EditorView, keymap} from "@codemirror/view";
 import fsOperation from "fileSystem";
-import {StateEffect} from "@codemirror/state";
-import {defaultKeymap} from "@codemirror/commands";
+import { defaultKeymap } from "@codemirror/commands";
+import { StateEffect } from "@codemirror/state";
+// commandManager.js
+import { EditorView, keymap } from "@codemirror/view";
 import Url from "../utils/Url";
 import keyBindings from "./keyBindings";
 
+// TODO: byName getter.
 export default class CommandManager {
-	constructor(view) {
+	/**
+	 *
+	 * @param view {EditorView}
+	 * @param keymapCompartment {import("@codemirror/state/dist/index").Compartment}
+	 */
+	constructor(view, keymapCompartment) {
 		this.view = view;
 		this.commands = {}; // name → command function
 		this.addedKeybindings = new Map(); // name → keybinding object
 		this.addedExtensions = new Map(); // name → extension for cleanup
+		this.dynamicKeymapExtensions = [];
 
-		this.defaultKeymapExtension = keymap.of(defaultKeymap);
+		this.keymapCompartment = keymapCompartment;
+		// this.defaultKeymapExtension = keymap.of(defaultKeymap);
 
 		// Macro system
 		this.macros = {};
@@ -28,7 +34,6 @@ export default class CommandManager {
 		this._onAfterExec = [];
 	}
 
-
 	loadKeybindingsFromConfig(config) {
 		// Reset if needed (you can add "reset: true" to your JSON if desired)
 		// if (config.reset) this.resetKeybindings();
@@ -39,7 +44,7 @@ export default class CommandManager {
 				description,
 				readOnly = false,
 				editorOnly = false,
-				action = commandName // fallback to commandName
+				action = commandName, // fallback to commandName
 			} = def;
 
 			if (!key) continue;
@@ -47,7 +52,7 @@ export default class CommandManager {
 			// Split multiple keys: "Ctrl+0|Ctrl-Numpad0" → ["Ctrl+0", "Ctrl-Numpad0"]
 			const keyCombos = key.split("|");
 
-			keyCombos.forEach(rawKey => {
+			keyCombos.forEach((rawKey) => {
 				const bindingName = `${commandName}-${rawKey}`;
 
 				this.addCommand({
@@ -61,12 +66,14 @@ export default class CommandManager {
 					},
 					readOnly,
 					description,
-					editorOnly
+					editorOnly,
 				});
 			});
 		}
 
-		console.log(`✅ Loaded ${Object.keys(config).length} command definitions with ${this.addedKeybindings.size} keybindings.`);
+		console.log(
+			`✅ Loaded ${Object.keys(config).length} command definitions with ${this.addedKeybindings.size} keybindings.`,
+		);
 	}
 
 	normalizeAceKey(aceKey) {
@@ -115,7 +122,10 @@ export default class CommandManager {
 				console.log("📁 Keybindings loaded from file:", file.name);
 			}
 		} catch (err) {
-			console.warn("⚠️ Failed to load keybindings file, falling back to CodeMirror 6 defaults:", err);
+			console.warn(
+				"⚠️ Failed to load keybindings file, falling back to CodeMirror 6 defaults:",
+				err,
+			);
 
 			// Fallback: reset to defaults
 			await this.resetKeybindings();
@@ -126,25 +136,26 @@ export default class CommandManager {
 		focusEditor: {
 			key: "Ctrl-1",
 			description: "Focus Editor",
-			readOnly: false
+			readOnly: false,
 		},
 		resetFontSize: {
 			key: "Ctrl-0|Ctrl-Numpad0",
 			description: "Reset Font Size",
-			editorOnly: true
+			editorOnly: true,
 		},
 		openTerminal: {
 			key: "Ctrl-`",
 			description: "Open terminal",
 			readOnly: true,
-			action: "open-terminal"
-		}
+			action: "open-terminal",
+		},
 		// Add more defaults here
 	};
 
 	async resetKeybindings() {
 		try {
-			// Clear all our dynamic keymap extensions
+			// Clear our tracked state
+			this.dynamicKeymapExtensions = [];
 			this.addedExtensions.clear();
 			this.addedKeybindings.clear();
 
@@ -152,8 +163,8 @@ export default class CommandManager {
 			const fileName = Url.basename(KEYBINDING_FILE);
 			const defaultKeymapJSON = defaultKeymap.reduce((acc, c) => {
 				acc[c.key] = c;
-				return acc
-			}, {})
+				return acc;
+			}, {});
 			const content = JSON.stringify(defaultKeymapJSON, undefined, 2);
 
 			if (!(await fs.exists())) {
@@ -166,15 +177,18 @@ export default class CommandManager {
 			// Reconfigure with ONLY CodeMirror 6 defaults
 			this.view.dispatch({
 				// TODO: reset to CodeMirror 6 defaults Along with Acode App-based Default keymaps
-				effects: StateEffect.reconfigure.of([this.defaultKeymapExtension])
+				effects: this.keymapCompartment.reconfigure([]),
 			});
 
 			// Re-add defaults
 			// this.loadKeybindingsFromConfig(this._defaultKeybindingsConfig);
 
-			console.log("🔄 Keybindings reset to defaults");
+			// console.log("🔄 Keybindings reset to defaults");
+			console.log(
+				"🔄 Custom keybindings cleared. CodeMirror 6 defaults still active.",
+			);
 		} catch (err) {
-			console.log("⚠️ Failed to reset keybindings err: ", err)
+			console.log("⚠️ Failed to reset keybindings err: ", err);
 		}
 	}
 
@@ -195,7 +209,9 @@ export default class CommandManager {
 					description: cmd?.description || "",
 					readOnly: cmd?.readOnly || false,
 					editorOnly: cmd?.editorOnly || false,
-					action: cmd?.action || (commandName === bindingName ? undefined : commandName)
+					action:
+						cmd?.action ||
+						(commandName === bindingName ? undefined : commandName),
 				};
 			}
 
@@ -225,7 +241,9 @@ export default class CommandManager {
 		// ⚠️ Warn if handler doesn't seem to accept parameters (we pass 3 args)
 		// Check function length (number of declared parameters)
 		if (handler.length === 0) {
-			console.warn(`Command '${name}' has handler with 0 parameters. Expected at least (view, args, commandManager). Consider adding parameters for full functionality.`);
+			console.warn(
+				`Command '${name}' has handler with 0 parameters. Expected at least (view, args, commandManager). Consider adding parameters for full functionality.`,
+			);
 		}
 
 		// Wrap handler with hook + readOnly support
@@ -263,9 +281,15 @@ export default class CommandManager {
 		if (bindKey) {
 			const keyBinding = this.normalizeBindKey(bindKey, name);
 			const ext = keymap.of([keyBinding]);
+			this.dynamicKeymapExtensions.push(ext);
+
+			// ✅ Use compartment to add keymap
 			this.view.dispatch({
-				effects: StateEffect.appendConfig.of(ext)
+				effects: this.keymapCompartment.reconfigure(
+					this.dynamicKeymapExtensions,
+				),
 			});
+
 			this.addedKeybindings.set(name, keyBinding);
 			this.addedExtensions.set(name, ext);
 		}
@@ -277,13 +301,13 @@ export default class CommandManager {
 		if (typeof bindKey === "string") {
 			return {
 				key: bindKey,
-				run: (view) => this.exec(commandName, view)
+				run: (view) => this.exec(commandName, view),
 			};
 		} else {
 			return {
 				key: bindKey.win || bindKey.pc || bindKey.linux || "",
 				mac: bindKey.mac || "",
-				run: (view) => this.exec(commandName, view)
+				run: (view) => this.exec(commandName, view),
 			};
 		}
 	}
@@ -300,9 +324,9 @@ export default class CommandManager {
 				.filter(([key]) => key !== name)
 				.map(([, ext]) => ext);
 
-			// Reconfigure with remaining dynamic extensions
+			// Use compartment to reconfigure with remaining keymap
 			this.view.dispatch({
-				effects: StateEffect.reconfigure.of(remainingExtensions)
+				effects: this.keymapCompartment.reconfigure(remainingExtensions),
 			});
 
 			this.addedExtensions.delete(name);
@@ -334,7 +358,9 @@ export default class CommandManager {
 		if (!this.isRecording) return;
 		this.macros[this.currentMacroName] = [...this.currentMacro];
 		this.isRecording = false;
-		console.log(`✅ Macro "${this.currentMacroName}" recorded (${this.currentMacro.length} steps)`);
+		console.log(
+			`✅ Macro "${this.currentMacroName}" recorded (${this.currentMacro.length} steps)`,
+		);
 	}
 
 	replayMacro(name = "default") {
@@ -369,9 +395,9 @@ export default class CommandManager {
 
 	off(event, handler) {
 		if (event === "beforeExec") {
-			this._onBeforeExec = this._onBeforeExec.filter(h => h !== handler);
+			this._onBeforeExec = this._onBeforeExec.filter((h) => h !== handler);
 		} else if (event === "afterExec") {
-			this._onAfterExec = this._onAfterExec.filter(h => h !== handler);
+			this._onAfterExec = this._onAfterExec.filter((h) => h !== handler);
 		}
 	}
 
