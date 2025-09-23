@@ -181,7 +181,7 @@
 
         - name: Release Nightly Version
 #          Only run this step, if not called from another workflow. And a previous step is successful with releasedRequired=true
-          if: ! inputs.skip_tagging_and_releases && success() && env.releaseRequired == 'true'
+          if: ${{ ! inputs.skip_tagging_and_releases && success() && env.releaseRequired == 'true' }}
           uses: softprops/action-gh-release@v2
           with:
             prerelease: true
