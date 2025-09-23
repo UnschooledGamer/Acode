@@ -46,7 +46,7 @@
       # if: github.repository_owner == 'Acode-Foundation'
       
       outputs:
-         release_output: ${{ steps.release.outputs }} 
+         release_output_url: ${{ steps.release.outputs.url }} 
          updated_version: ${{ steps.update-version.outputs.UPDATED_VERSION}} 
       steps:
         - name: Fast Fail if secrets are missing
@@ -219,6 +219,6 @@
       uses: unschooledgamer/acode/.github/workflows/community-release-notifier.yml@8aa552de6c051baa50ef31306c0ff3b41e66c43e
       with:
          tag_name: ${{ needs.build.outputs.updated_version }}
-         url: ${{ needs.build.outputs.release_output.url }} 
+         url: ${{ needs.build.outputs.release_output_url }} 
       secrets:
         DISCORD_WEBHOOK_RELEASE_NOTES: ${{ secrets.DISCORD_WEBHOOK_RELEASE_NOTES }}
