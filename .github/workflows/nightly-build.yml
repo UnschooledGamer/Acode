@@ -177,6 +177,7 @@
           with:
             prerelease: true
             name: ${{ env.UPDATED_VERSION }}
+            tag_name: ${{ env.UPDATED_VERSION }} 
             files: |
               platforms/android/app/build/outputs/apk/debug/app-debug.apk
             body: |
