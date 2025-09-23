@@ -63,6 +63,7 @@ jobs:
       with:
         is_PR: true
         PR_NUMBER: ${{ github.event.pull_request.number }}
+        skip_tagging_and_releases: true
 
   update_Last_Comment:
       needs: [job_trigger,trigger_builder]
