@@ -48,10 +48,20 @@ jobs:
            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Add comment to PR
-        run: |
-            git config --global user.name 'GitHub Actions'
-            git config --global user.email 'github-actions@github.com'
-            gh pr comment $PR --body "⚒️ Starting a workflow to build, Your On-Demand Preview Release/build for ${{ github.event.pull_request.url }}. \n\n status: **\`🟡 in_progress\`** \n\n Kindly wait, this message may be updated with success or failure status."
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          hide_and_recreate: true
+          hide_classify: "OUTDATED"
+          header: on-demand-build-status
+          message: |
+            ⚒️ Starting a workflow to build, Your On-Demand Preview Release/build for ${{ github.event.pull_request.html_url || github.event.pull_request.url }}.
+            
+            status: **\`🟡 in_progress\`**
+            
+            Kindly wait, this message may be updated with success or failure status.
+            
+            For Owners: Please [Click here to view that github actions](https://github.com/${{ github.repository}}/actions/runs/${{ github.run_id }})/
+
         env:
           PR: ${{ github.event.pull_request.number }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
