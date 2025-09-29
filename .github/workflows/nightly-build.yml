@@ -43,7 +43,7 @@
     build:
       timeout-minutes: 60
       runs-on: ubuntu-latest
-      # if: github.repository_owner == 'Acode-Foundation'
+      if: github.repository_owner == 'Acode-Foundation'
       
       outputs:
          release_output_url: ${{ steps.release.outputs.url }} 
@@ -215,8 +215,8 @@
     community-release-notifier:
       needs: build
 #      Run only if push tags, or triggered by a schedule
-      if: ${{ (contains(fromJSON('["push", "schedule"]'), github.event_name) || ! inputs.skip_tagging_and_releases) && needs.build.outputs.release_output_url }}
-      uses: unschooledgamer/acode/.github/workflows/community-release-notifier.yml@1ee998c253d93dc03a7094977d81d72f569df828
+      if: ${{ github.repository_owner == 'Acode-Foundation' && (contains(fromJSON('["push", "schedule"]'), github.event_name) || ! inputs.skip_tagging_and_releases) && needs.build.outputs.release_output_url }}
+      uses: Acode-Foundation/acode/.github/workflows/community-release-notifier.yml@main
       with:
          tag_name: ${{ needs.build.outputs.updated_version }}
          url: ${{ needs.build.outputs.release_output_url }}

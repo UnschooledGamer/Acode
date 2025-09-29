@@ -23,12 +23,13 @@ jobs:
   job_trigger:
     name: Trigger Preview Release (if conditions met)
     if: |
-      (!contains(github.event.pull_request.labels.*.name, 'DO NOT PREVIEW RELEASE') 
-      && (contains(github.event.pull_request.labels.*.name, 'Bypass check - PREVIEW RELEASE') 
-      || contains(github.event.pull_request.labels.*.name, 'CI: RUN ON-DEMAND PREVIEW RELEASES')))
+        (github.repository_owner == 'Acode-Foundation'
+        && (!contains(github.event.pull_request.labels.*.name, 'DO NOT PREVIEW RELEASE') 
+        && (contains(github.event.pull_request.labels.*.name, 'Bypass check - PREVIEW RELEASE') 
+        || contains(github.event.pull_request.labels.*.name, 'CI: RUN ON-DEMAND PREVIEW RELEASES')))
+        )
 
     runs-on: ubuntu-latest
-    # if: github.repository_owner == 'Acode-Foundation'
 
     steps:
       - name: Checkout code
@@ -69,7 +70,7 @@ jobs:
   trigger_builder:
       needs: job_trigger
       secrets: inherit
-      uses: unschooledgamer/acode/.github/workflows/nightly-build.yml@efe76dff888b30571c1c8a6b75ff648afbc4dcbf
+      uses: Acode-Foundation/acode/.github/workflows/nightly-build.yml@main
       with:
         is_PR: true
         PR_NUMBER: ${{ github.event.pull_request.number }}
@@ -78,7 +79,7 @@ jobs:
   update_Last_Comment:
       needs: [job_trigger,trigger_builder]
       runs-on: ubuntu-latest
-      if: ${{ always() && contains(fromJSON('["failure","cancelled"]'), needs.trigger_builder.result) }}
+      if: ${{ github.repository_owner == 'Acode-Foundation' && always() && contains(fromJSON('["failure","cancelled"]'), needs.trigger_builder.result) }}
       steps:
 #        - name: Checkout code
 #          uses: actions/checkout@v4

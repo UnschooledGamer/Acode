@@ -19,7 +19,7 @@ on:
 
 jobs:
   discord-release:
-    # if: github.repository_owner == 'Acode-Foundation'
+    if: github.repository_owner == 'Acode-Foundation'
     runs-on: ubuntu-latest
     steps:
     - name: Get Release Content
