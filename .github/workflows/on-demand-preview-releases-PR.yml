@@ -7,7 +7,7 @@ on:
 #      - '.github/**'
     types: [labeled, synchronize]
 
-
+# defined at workflow-level as the workflow, Requires these permissions to function.
 permissions:
   contents: write
   pull-requests: write
