@@ -79,7 +79,7 @@ export default function otherSettings() {
 		},
 		{
 			key: "cleanInstallState",
-			text: strings.cleanInstallState
+			text: strings.cleanInstallState,
 		},
 		{
 			key: "keyboardMode",
@@ -254,20 +254,20 @@ export default function otherSettings() {
 
 				const fs = fsOperation(INSTALL_STATE_STORAGE);
 
-				if(!(await fs.exists())) {
-					toast(strings["no such file or directory"])
+				if (!(await fs.exists())) {
+					toast(strings["no such file or directory"]);
 					break;
 				}
 
-				loader.create("loading...")
+				loader.create("loading...");
 
 				try {
-					await fs.delete()
+					await fs.delete();
 					loader.destroy();
-					toast(strings["success"])
+					toast(strings["success"]);
 				} catch (error) {
 					helpers.error(error);
-					loader.destroy()
+					loader.destroy();
 				}
 			}
 
