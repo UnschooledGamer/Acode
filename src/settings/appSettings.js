@@ -79,7 +79,7 @@ export default function otherSettings() {
 		},
 		{
 			key: "cleanInstallState",
-			text: strings.cleanInstallState,
+			text: strings["clean install state"],
 		},
 		{
 			key: "keyboardMode",
