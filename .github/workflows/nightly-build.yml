@@ -177,7 +177,7 @@
           uses: actions/upload-artifact@v4
           with:
             name: app-debug-${{ env.GIT_COMMIT }}
-            path: platforms/android/app/build/outputs/apk/debug/app-debug.apk
+            path: platforms/android/app/build/outputs/apk/debug/app-debug-normal.apk
         
         - name: Run npm build paid dev apk fdroid (for F-Droid)
           if: ${{ !inputs.is_PR }}
