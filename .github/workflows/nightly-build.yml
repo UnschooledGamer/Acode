@@ -65,6 +65,7 @@
       outputs:
          release_output_url: ${{ steps.release.outputs.url }} 
          updated_version: ${{ steps.update-version.outputs.UPDATED_VERSION}} 
+         RELEASE_NOTES: ${{ env.RELEASE_NOTES }}
       steps:
         - name: Fast Fail if secrets are missing
           if: ${{ env.KEYSTORE_CONTENT == '' || env.BUILD_JSON_CONTENT == '' }}
@@ -256,5 +257,6 @@
       with:
          tag_name: ${{ needs.build.outputs.updated_version }}
          url: ${{ needs.build.outputs.release_output_url }}
+         body: ${{ needs.build.outputs.RELEASE_NOTES }}
       secrets:
         DISCORD_WEBHOOK_RELEASE_NOTES: ${{ secrets.DISCORD_WEBHOOK_RELEASE_NOTES }}
