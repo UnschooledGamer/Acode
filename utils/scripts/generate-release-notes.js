@@ -27,9 +27,8 @@ const args = process.argv.slice(2);
 
 function getArgValue(flag) {
   const idx = args.indexOf(flag);
-  return idx !== -1 && !args[idx + 1].startsWith("-") ? args[idx + 1] : null;
+  return idx !== -1 && args[idx + 1] && !args[idx + 1].startsWith("-") ? args[idx + 1] : null;
 }
-
 if (args.includes("--help") || args.length < 3) {
   console.log(`
 Usage: GITHUB_TOKEN=<token> node generate-release-notes.js <owner> <repo> <tag> [options]
@@ -41,8 +40,10 @@ Options:
   --merge-only        Include only merge commits
   --help              Show this help message
   --format [md/json]  Output Format
-  --fromTag v1.11.0   The From/Previous Tag
+  --from-tag v1.11.0   The From/Previous Tag
   --quiet             Suppress output to stdout
+  --stdout-only       Output to stdout only
+  --changelog-only    Output changelog only
 `);
   process.exit(0);
 }
