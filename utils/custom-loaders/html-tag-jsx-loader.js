@@ -15,11 +15,10 @@ module.exports = function htmlTagJsxLoader(source) {
 
   try {
     // Debug logging - verify loader is running
-    console.log('🔧 Custom JSX loader processing:', this.resourcePath);
+    // console.log(`🔧 Custom JSX loader processing: ${this.resourcePath}\n`);
     
     // Determine file type from extension
     const isTypeScript = /\.tsx?$/.test(this.resourcePath);
-    const isJavaScript = /\.(jsx?|mjs)$/.test(this.resourcePath);
     
     // Quick check: if no JSX syntax at all, pass through unchanged
     // Look for JSX opening tags: < followed by a letter or uppercase

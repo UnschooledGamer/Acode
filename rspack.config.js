@@ -62,7 +62,7 @@ module.exports = (env, options) => {
       exclude: /node_modules/,
       use: [
         // First: Transform JSX to tag() calls
-        path.resolve(__dirname, 'html-tag-jsx-loader.js'),
+        path.resolve(__dirname, 'utils/custom-loaders/html-tag-jsx-loader.js'),
         // Then: Use SWC for TypeScript and ES6+ transpilation
         {
           loader: 'builtin:swc-loader',
@@ -70,15 +70,10 @@ module.exports = (env, options) => {
             jsc: {
               parser: {
                 syntax: 'typescript',
-                tsx: true, // Still parse JSX syntax (before it gets transformed)
+                tsx: true,
               },
               target: 'es2015',
             },
-            // env: {
-            //   mode: 'usage',
-            //   coreJs: '3.22',
-            //   targets: 'defaults',
-            // },
           },
         },
       ],
@@ -100,9 +95,6 @@ module.exports = (env, options) => {
                   },
                   target: 'es2015',
                 },
-                // env: {
-                //   targets: 'defaults',
-                // },
               },
             },
           ],
@@ -116,37 +108,12 @@ module.exports = (env, options) => {
                 jsc: {
                   parser: {
                     syntax: 'ecmascript',
-                    // NO jsx - it's already removed by custom loader below
                   },
                   target: 'es2015',
                 },
-                // env: {
-                //   mode: 'usage',
-                //   coreJs: '3.22',
-                //   targets: 'defaults',
-                // },
               },
             },
-            // First: Transform JSX to tag() calls
-            path.resolve(__dirname, 'html-tag-jsx-loader.js'),
-            // Then: Use SWC for ES6+ transpilation
-            // {
-            //   loader: 'builtin:swc-loader',
-            //   options: {
-            //     jsc: {
-            //       parser: {
-            //         syntax: 'ecmascript',
-            //         // JSX is already transformed by custom loader above
-            //       },
-            //       target: 'es2015',
-            //     },
-            //     // env: {
-            //     //   mode: 'usage',
-            //     //   coreJs: '3.22',
-            //     //   targets: 'defaults',
-            //     // },
-            //   },
-            // },
+            path.resolve(__dirname, 'utils/custom-loaders/html-tag-jsx-loader.js'),
           ],
         },
       ],
