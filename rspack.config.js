@@ -11,9 +11,6 @@ module.exports = (env, options) => {
       test: /\.tsx?$/,
       exclude: /node_modules/,
       use: [
-        // First: Transform JSX to tag() calls
-        path.resolve(__dirname, 'utils/custom-loaders/html-tag-jsx-loader.js'),
-        // Then: Use SWC for TypeScript and ES6+ transpilation
         {
           loader: 'builtin:swc-loader',
           options: {
@@ -26,6 +23,7 @@ module.exports = (env, options) => {
             },
           },
         },
+        path.resolve(__dirname, 'utils/custom-loaders/html-tag-jsx-loader.js'),
       ],
     },
     // JavaScript files
