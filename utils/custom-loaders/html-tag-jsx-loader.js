@@ -21,11 +21,9 @@ module.exports = function htmlTagJsxLoader(source) {
 		const isTypeScript = /\.tsx?$/.test(this.resourcePath);
 
 		// Quick check: if no JSX syntax at all, pass through unchanged
-		// Look for JSX opening tags: < followed by a letter or uppercase
-		const hasJSXLike = /<[A-Z][\w]*[\s/>]|<[a-z]+[\s\/>]/.test(source);
+		// Look for complete JSX opening tags with proper spacing
+		const hasJSXLike = /<[A-Z][a-zA-Z0-9]*(?:\s|\/?>)|<[a-z]+(?:\s|\/?>)/.test(source);
 		if (!hasJSXLike) {
-			return callback(null, source);
-		}
 
 		// Parse with appropriate plugins
 		const parserPlugins = ["jsx"];
