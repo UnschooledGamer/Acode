@@ -29,9 +29,8 @@ module.exports = function htmlTagJsxLoader(source) {
 
 		// Parse with appropriate plugins
 		const parserPlugins = [
+		const parserPlugins = [
 			"jsx",
-			"@babel/plugin-transform-runtime",
-			"@babel/plugin-transform-block-scoping",
 		];
 		if (isTypeScript) {
 			parserPlugins.push("typescript");
