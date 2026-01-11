@@ -278,7 +278,10 @@ module.exports = function htmlTagJsxLoader(source) {
 
 		callback(null, output.code, output.map);
 	} catch (error) {
-		callback(error);
+		const errorMessage = `html-tag-jsx-loader failed to process ${this.resourcePath}: ${error.message}`;
+		const enhancedError = new Error(errorMessage);
+		enhancedError.stack = error.stack;
+		callback(enhancedError);
 	}
 };
 
