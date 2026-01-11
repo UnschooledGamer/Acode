@@ -63,11 +63,13 @@ module.exports = (env, options) => {
         {
           use: [
             {
+            {
               loader: 'builtin:swc-loader',
               options: {
                 jsc: {
                   parser: {
                     syntax: 'ecmascript',
+                    jsx: false,
                   },
                   target: 'es2015',
                 },
