@@ -12,13 +12,12 @@ module.exports = (env, options) => {
       exclude: /node_modules/,
       use: [
         {
-        {
           loader: 'builtin:swc-loader',
           options: {
             jsc: {
               parser: {
                 syntax: 'typescript',
-                tsx: true,
+                tsx: false,
               },
               transform: {
                 react: {
@@ -33,7 +32,6 @@ module.exports = (env, options) => {
               target: 'es2015',
             },
           },
-        },
         },
         path.resolve(__dirname, 'utils/custom-loaders/html-tag-jsx-loader.js'),
       ],
@@ -62,7 +60,6 @@ module.exports = (env, options) => {
         // Source JS files - Custom JSX loader + SWC (JSX will be removed first)
         {
           use: [
-            {
             {
               loader: 'builtin:swc-loader',
               options: {

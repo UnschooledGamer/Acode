@@ -24,6 +24,8 @@ module.exports = function htmlTagJsxLoader(source) {
 		// Look for complete JSX opening tags with proper spacing
 		const hasJSXLike = /<[A-Z][a-zA-Z0-9]*(?:\s|\/?>)|<[a-z]+(?:\s|\/?>)/.test(source);
 		if (!hasJSXLike) {
+			return callback(null, source)
+		}
 
 		// Parse with appropriate plugins
 		const parserPlugins = ["jsx"];
@@ -283,6 +285,8 @@ module.exports = function htmlTagJsxLoader(source) {
 /**
  * Parse node to expression
  */
+function parseNode(types, node) {
+	const { type } = node;
 	if (type === "JSXText") {
 		const trimmed = node.value.trim();
 		if (!trimmed) return null;
