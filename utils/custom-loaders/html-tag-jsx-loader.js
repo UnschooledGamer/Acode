@@ -40,8 +40,8 @@ module.exports = function htmlTagJsxLoader(source) {
 		let needsTagImport = false;
 		let hasJSX = false;
 		const hasExistingImport =
-			source.includes("import tag from 'html-tag-js'") ||
-			source.includes('import tag from "html-tag-js"');
+			/import\s+(?:\{[^}]*\btag\b[^}]*\}|tag(?:\s+as\s+\w+)?)\s+from\s+['"]html-tag-js['"]/.test(source) ||
+			/(?:const|let|var)\s+(?:\{[^}]*\btag\b[^}]*\}|tag)\s*=\s*require\s*\(\s*['"]html-tag-js['"]\s*\)/.test(source);
 
 		// Transform JSX elements
 		traverse(ast, {
