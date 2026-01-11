@@ -22,7 +22,7 @@ module.exports = function htmlTagJsxLoader(source) {
 
 		// Quick check: if no JSX syntax at all, pass through unchanged
 		// Look for JSX opening tags: < followed by a letter or uppercase
-		const hasJSXLike = /<[A-Za-z]/.test(source);
+		const hasJSXLike = /<[A-Z][\w]*[\s/>]|<[a-z]+[\s\/>]/.test(source);
 		if (!hasJSXLike) {
 			return callback(null, source);
 		}
