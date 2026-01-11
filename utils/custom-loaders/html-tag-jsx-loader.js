@@ -285,11 +285,10 @@ module.exports = function htmlTagJsxLoader(source) {
 /**
  * Parse node to expression
  */
-function parseNode(types, node) {
-	const { type } = node;
-
 	if (type === "JSXText") {
-		return types.stringLiteral(node.value);
+		const trimmed = node.value.trim();
+		if (!trimmed) return null;
+		return types.stringLiteral(trimmed);
 	}
 
 	if (type === "JSXElement") {
