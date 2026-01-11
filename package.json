@@ -71,6 +71,7 @@
     "babel-loader": "^10.0.0",
     "com.foxdebug.acode.rk.auth": "file:src/plugins/auth",
     "com.foxdebug.acode.rk.customtabs": "file:src/plugins/custom-tabs",
+    "com.foxdebug.acode.rk.exec.proot": "file:src/plugins/proot",
     "com.foxdebug.acode.rk.exec.terminal": "file:src/plugins/terminal",
     "cordova-android": "^14.0.1",
     "cordova-clipboard": "^1.3.0",
