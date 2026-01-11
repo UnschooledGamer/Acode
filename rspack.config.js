@@ -12,6 +12,7 @@ module.exports = (env, options) => {
       exclude: /node_modules/,
       use: [
         {
+        {
           loader: 'builtin:swc-loader',
           options: {
             jsc: {
@@ -19,9 +20,20 @@ module.exports = (env, options) => {
                 syntax: 'typescript',
                 tsx: true,
               },
+              transform: {
+                react: {
+                  pragma: 'tag',
+                  pragmaFrag: 'Array',
+                  throwIfNamespace: false,
+                  development: false,
+                  useBuiltins: false,
+                  runtime: 'classic',
+                },
+              },
               target: 'es2015',
             },
           },
+        },
         },
         path.resolve(__dirname, 'utils/custom-loaders/html-tag-jsx-loader.js'),
       ],
