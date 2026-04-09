@@ -76,7 +76,7 @@ export default {
 				if (pathnames[1].startsWith("/")) pathnames[1] = pathnames[1].slice(1);
 				const contentUri = Uri.parse(url);
 				let [root, pathname] = contentUri.docId.split(":");
-				const newDocId = path.join(pathname, ...pathnames.slice(1));
+				let newDocId = path.join(pathname, ...pathnames.slice(1));
 				if (/^content:\/\/com.termux/.test(url)) {
 					const rootCondition = root.endsWith("/");
 					const newDocIdCondition = newDocId.startsWith("/");
