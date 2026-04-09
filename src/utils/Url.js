@@ -85,6 +85,9 @@ export default {
 					} else if (!rootCondition === !newDocIdCondition) {
 						root += "/";
 					}
+					// if pathname is undefined, meaning a docId/volume (e.g :primary:)
+					// has not been detected, so no newDocId's ":" will be added.
+					if(!pathname) return `${contentUri.rootUri}::${root}${newDocId.startsWith("/") ? newDocId.slice(1) : newDocId}${query}`
 					return `${contentUri.rootUri}::${root}${newDocId}${query}`;
 				}
 				return `${contentUri.rootUri}::${root}:${newDocId}${query}`;
