@@ -1,5 +1,5 @@
-import { TestRunner } from "./tester";
 import Url from "../utils/Url";
+import { TestRunner } from "./tester";
 
 export async function runUrlTests(writeOutput) {
 	const runner = new TestRunner("URL / SAF URI Tests");
