@@ -85,21 +85,22 @@ export default {
 					} else if (!rootCondition === !newDocIdCondition) {
 						root += "/";
 					}
-					// if pathname is undefined, meaning a docId/volume (e.g :primary:)
-					// has not been detected, so no newDocId's ":" will be added.
-					if(!pathname) {
-						// Ensure proper path separator between root and newDocId
-						let separator = '';
-						if (root.endsWith('/') && newDocId.startsWith('/')) {
-							// Both have separator, strip one from newDocId
-							newDocId = newDocId.slice(1);
-						} else if (!root.endsWith('/') && !newDocId.startsWith('/')) {
-							// Neither has separator, add one
-							separator = '/';
-						}
-						return `${contentUri.rootUri}::${root}${separator}${newDocId}${query}`;
-					}
 					return `${contentUri.rootUri}::${root}${newDocId}${query}`;
+				}
+
+				// if pathname is undefined, meaning a docId/volume (e.g :primary:)
+				// has not been detected, so no newDocId's ":" will be added.
+				if (!pathname) {
+					// Ensure proper path separator between root and newDocId
+					let separator = "";
+					if (root.endsWith("/") && newDocId.startsWith("/")) {
+						// Both have separator, strip one from newDocId
+						newDocId = newDocId.slice(1);
+					} else if (!root.endsWith("/") && !newDocId.startsWith("/")) {
+						// Neither has separator, add one
+						separator = "/";
+					}
+					return `${contentUri.rootUri}::${root}${separator}${newDocId}${query}`;
 				}
 				return `${contentUri.rootUri}::${root}:${newDocId}${query}`;
 			} catch (error) {
