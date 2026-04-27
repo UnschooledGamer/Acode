@@ -34,15 +34,16 @@ RUN wget -q "https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-
     && ln -s /opt/gradle-${GRADLE_VERSION} ${GRADLE_HOME}
 
 # Install fnm and Node.js
-ENV FNM_DIR=/usr/local/fnm
-ENV PATH="${FNM_DIR}:${PATH}"
-RUN curl -fsSL https://fnm.vercel.app/install | bash -s -- --install-dir "${FNM_DIR}" --skip-shell \
-    && eval "$(${FNM_DIR}/fnm env)" \
-    && fnm install ${NODE_VERSION} \
-    && fnm default ${NODE_VERSION} \
-    && npm install -g pnpm
+# Not required, mostly. When dev containers are used. 
+# ENV FNM_DIR=/usr/local/fnm
+# ENV PATH="${FNM_DIR}:${PATH}"
+# RUN curl -fsSL https://fnm.vercel.app/install | bash -s -- --install-dir "${FNM_DIR}" --skip-shell \
+#    && eval "$(${FNM_DIR}/fnm env)" \
+#    && fnm install ${NODE_VERSION} \
+#    && fnm default ${NODE_VERSION} \
+#    && npm install -g pnpm
 
-ENV PATH="${FNM_DIR}/aliases/default/bin:${PATH}"
+# ENV PATH="${FNM_DIR}/aliases/default/bin:${PATH}"
 
 # Install Android SDK
 RUN mkdir -p ${ANDROID_HOME}/cmdline-tools \
