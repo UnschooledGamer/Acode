@@ -8,7 +8,7 @@
 FROM mcr.microsoft.com/devcontainers/java:1-21-bullseye
 
 ARG ANDROID_PLATFORM=35
-ARG ANDROID_BUILD_TOOLS=35.0.0
+ARG ANDROID_BUILD_TOOLS=36.0.0
 ARG CMDLINE_TOOLS_VERSION=11076708
 ARG NODE_VERSION=22
 ARG GRADLE_VERSION=8.11
@@ -18,9 +18,13 @@ ENV ANDROID_SDK_ROOT=/opt/android-sdk
 ENV GRADLE_HOME=/opt/gradle
 ENV PATH="${PATH}:${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools:${GRADLE_HOME}/bin"
 
+# removes broken yarn repo present in base image
+RUN rm -f /etc/apt/sources.list.d/yarn.list
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
     wget \
     unzip \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Gradle
