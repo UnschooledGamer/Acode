@@ -25,7 +25,7 @@
     }
   },
   "overrideCommand": true,
-  "postCreateCommand": "pnpm run setup",
+  "postCreateCommand": "npm i -g pnpm && pnpm run setup",
   "remoteUser": "root",
   "customizations": {
     "vscode": {
