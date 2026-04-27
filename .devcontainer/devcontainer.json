@@ -5,11 +5,11 @@
   },
 
   "containerEnv": {
-  "JAVA_HOME": "/usr/local/openjdk-21"
-},
-"remoteEnv": {
-  "JAVA_HOME": "/usr/local/openjdk-21"
-},
+    "JAVA_HOME": "/usr/local/openjdk-21"
+  },
+  "remoteEnv": {
+    "JAVA_HOME": "/usr/local/openjdk-21"
+  },
 
   "features": {
     "ghcr.io/nordcominc/devcontainer-features/android-sdk:1": {
