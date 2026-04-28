@@ -55,6 +55,19 @@ ENV PATH="${PATH}:${GRADLE_HOME}/bin"
 # Skipped when built by devcontainer. handled by the android-sdk feature instead.
 # Only install Android SDK if ANDROID_HOME is set (skipped in devcontainers where the android-sdk feature handles this).
 RUN if [ -n "${ANDROID_HOME}" ] && [ "$DEVCONTAINER" != "true" ]; then \
+    mkdir -p ${ANDROID_HOME}/cmdline-tools \
+      && cd ${ANDROID_HOME}/cmdline-tools \
+      && wget -q "https://dl.google.com/android/repository/commandlinetools-linux-${CMDLINE_TOOLS_VERSION}_latest.zip" -O cmdline-tools.zip \
+      && unzip -q cmdline-tools.zip \
+      && rm cmdline-tools.zip \
+      && mv cmdline-tools latest \
+      && yes | ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --licenses 2>/dev/null || true \
+      && ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --update \
+      && ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager \
+          "platform-tools" \
+          "platforms;android-${ANDROID_PLATFORM}" \
+          "build-tools;${ANDROID_BUILD_TOOLS}"; \
+    fi
 
 WORKDIR /workspaces/acode
 
