@@ -4,19 +4,23 @@
 # Usage:
 #   docker build -t acode-dev .devcontainer/
 #   docker run -it -v $(pwd):/workspaces/acode acode-dev
+# Uncomment certain commands when used in Standalone (MANUAL) Docker Builds (Kindly review them in throughout this file).
 
 FROM mcr.microsoft.com/devcontainers/java:1-21-bullseye
 
+ARG DEVCONTAINER=false
 ARG ANDROID_PLATFORM=36
 ARG ANDROID_BUILD_TOOLS=36.0.0
 ARG CMDLINE_TOOLS_VERSION=11076708
 ARG NODE_VERSION=22
 ARG GRADLE_VERSION=8.11
 
-ENV ANDROID_HOME=/opt/android-sdk
-ENV ANDROID_SDK_ROOT=/opt/android-sdk
+# (Uncomment when using Docker)
+# ENV ANDROID_HOME=/opt/android-sdk
+# ENV ANDROID_SDK_ROOT=/opt/android-sdk
 ENV GRADLE_HOME=/opt/gradle
-ENV PATH="${PATH}:${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools:${GRADLE_HOME}/bin"
+#  Not required, mostly. When dev containers are used. (Uncomment when using Docker)
+# ENV PATH="${PATH}:${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools"
 
 # removes broken yarn repo present in base image
 RUN rm -f /etc/apt/sources.list.d/yarn.list
@@ -33,7 +37,9 @@ RUN wget -q "https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-
     && rm /tmp/gradle.zip \
     && ln -s /opt/gradle-${GRADLE_VERSION} ${GRADLE_HOME}
 
-# Install fnm and Node.js
+ENV PATH="${PATH}:${GRADLE_HOME}/bin"
+
+# Install fnm and Node.js (Uncomment this when used in DOCKER)
 # Not required, mostly. When dev containers are used. 
 # ENV FNM_DIR=/usr/local/fnm
 # ENV PATH="${FNM_DIR}:${PATH}"
@@ -46,18 +52,21 @@ RUN wget -q "https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-
 # ENV PATH="${FNM_DIR}/aliases/default/bin:${PATH}"
 
 # Install Android SDK
-RUN mkdir -p ${ANDROID_HOME}/cmdline-tools \
-    && cd ${ANDROID_HOME}/cmdline-tools \
-    && wget -q "https://dl.google.com/android/repository/commandlinetools-linux-${CMDLINE_TOOLS_VERSION}_latest.zip" -O cmdline-tools.zip \
-    && unzip -q cmdline-tools.zip \
-    && rm cmdline-tools.zip \
-    && mv cmdline-tools latest \
-    && yes | ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --licenses 2>/dev/null || true \
-    && ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --update \
-    && ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager \
-        "platform-tools" \
-        "platforms;android-${ANDROID_PLATFORM}" \
-        "build-tools;${ANDROID_BUILD_TOOLS}"
+# Skipped when built by devcontainer. handled by the android-sdk feature instead.
+RUN if [ "$DEVCONTAINER" = "false" ]; then \
+      mkdir -p ${ANDROID_HOME}/cmdline-tools \
+      && cd ${ANDROID_HOME}/cmdline-tools \
+      && wget -q "https://dl.google.com/android/repository/commandlinetools-linux-${CMDLINE_TOOLS_VERSION}_latest.zip" -O cmdline-tools.zip \
+      && unzip -q cmdline-tools.zip \
+      && rm cmdline-tools.zip \
+      && mv cmdline-tools latest \
+      && yes | ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --licenses 2>/dev/null || true \
+      && ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --update \
+      && ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager \
+          "platform-tools" \
+          "platforms;android-${ANDROID_PLATFORM}" \
+          "build-tools;${ANDROID_BUILD_TOOLS}"; \
+    fi
 
 WORKDIR /workspaces/acode
 
