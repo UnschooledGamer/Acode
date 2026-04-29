@@ -35,9 +35,6 @@ If your editor doesn't support DevContainers, you can use Docker directly:
 git clone https://github.com/Acode-Foundation/Acode.git
 cd Acode
 
-# Check .devcontainer/Dockerfile to uncomment docker related commands.
-# As certain commands cannot be guarded with checks, Kindly check the file throughout.
-
 # Build the Docker image from our Dockerfile
 docker build -t acode-dev .devcontainer/
 
