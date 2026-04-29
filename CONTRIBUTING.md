@@ -36,7 +36,7 @@ git clone https://github.com/Acode-Foundation/Acode.git
 cd Acode
 
 # Build the Docker image from our Dockerfile
-docker build -t acode-dev .devcontainer/
+docker build --target standalone -t acode-dev .devcontainer/
 
 # Run the container with your code mounted
 docker run -it --rm \
