@@ -2,9 +2,7 @@
   "name": "Acode Development",
   "build": {
     "dockerfile": "Dockerfile",
-    "args": {
-      "DEVCONTAINER": "true"
-    }
+    "target": "devcontainer"
   },
 
   "containerEnv": {
@@ -21,7 +19,7 @@
       "platform": "36",
       "build_tools": "36.0.0"
     },
-    "ghcr.io/devcontainers/features/node:1": {
+    "ghcr.io/devcontainers/features/node:2.0": {
       "nodeGypDependencies": false,
       "installYarnUsingApt": false,
       "version": "lts",
