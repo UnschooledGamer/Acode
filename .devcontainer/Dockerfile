@@ -47,8 +47,8 @@ FROM base AS devcontainer
 # Includes Android SDK and Node/pnpm for plain docker build/run usage.
 FROM base AS standalone
 
-ENV ANDROID_HOME=/opt/android-sdk
-ENV ANDROID_SDK_ROOT=/opt/android-sdk
+ENV ANDROID_HOME=/usr/local/lib/android
+ENV ANDROID_SDK_ROOT=/usr/local/lib/android
 ENV PATH="${PATH}:${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools:${ANDROID_HOME}/build-tools/${ANDROID_BUILD_TOOLS}"
 
 # Install Android SDK
