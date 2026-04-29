@@ -28,6 +28,9 @@ Thank you for your interest in contributing to Acode! This guide will help you g
 
 ### Option 2: Docker CLI (For Any Editor)
 
+> [!NOTE]
+> If you try to use Podman, Kindly note that it would not work properly until https://github.com/containers/buildah/pull/5845 is merged/implemented in Podmon.
+
 If your editor doesn't support DevContainers, you can use Docker directly:
 
 ```bash
