@@ -5,13 +5,13 @@
 #   docker build --target standalone -t acode-dev .devcontainer/
 #   docker run -it -v $(pwd):/workspaces/acode acode-dev
 
-FROM mcr.microsoft.com/devcontainers/java:1-21-bullseye AS base
-
 ARG ANDROID_PLATFORM=36
 ARG ANDROID_BUILD_TOOLS=36.0.0
 ARG CMDLINE_TOOLS_VERSION=11076708
 ARG NODE_VERSION=22
 ARG GRADLE_VERSION=8.11
+
+FROM mcr.microsoft.com/devcontainers/java:1-21-bullseye AS base
 
 ENV GRADLE_HOME=/opt/gradle
 
