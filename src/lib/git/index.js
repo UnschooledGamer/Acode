@@ -155,30 +155,60 @@ async discoverRepository(url, opts = {}) {
 const cacheKey = String(url || "");
 const cached = this.#repoCache.get(cacheKey);
 if (!opts.force && cached && Date.now() - cached.timestamp < REPO_CACHE_MS) {
+console.info("[Git] Repository lookup from cache", {
+url: cacheKey,
+found: Boolean(cached.value),
+reason: cached.reason || null,
+cacheUsed: true,
+});
 return cached.value;
 }
 
 let repo = null;
+let failureReason = "";
+let backendName = "";
 try {
 const backend = await this.resolveBackend(url);
+backendName = backend.backend;
 const rootPath = await backend.runner.execute(backend.path, [
 "rev-parse",
 "--show-toplevel",
 ]);
-if (!rootPath) return null;
+if (!rootPath) {
+failureReason = "git rev-parse returned empty repository root";
+} else {
 repo = {
 rootPath,
 requestedPath: backend.path,
 backend: backend.backend,
 runner: backend.runner,
 };
-} catch {
+}
+} catch (error) {
 repo = null;
+failureReason = this.readableError(error);
+}
+
+if (repo) {
+console.info("[Git] Repository found", {
+url: cacheKey,
+rootPath: repo.rootPath,
+backend: repo.backend,
+cacheUsed: false,
+});
+} else {
+console.warn("[Git] Repository not found", {
+url: cacheKey,
+backend: backendName || null,
+reason: failureReason || "Unknown reason",
+cacheUsed: false,
+});
 }
 
 this.#repoCache.set(cacheKey, {
 timestamp: Date.now(),
 value: repo,
+reason: failureReason,
 });
 return repo;
 }
