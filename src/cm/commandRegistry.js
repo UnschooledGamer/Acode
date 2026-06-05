@@ -258,6 +258,56 @@ function registerCoreCommands() {
 		},
 	});
 	addCommand({
+		name: "gitOpenPanel",
+		description: "Open Git panel",
+		readOnly: true,
+		requiresView: false,
+		run() {
+			acode.exec("git-open-panel");
+			return true;
+		},
+	});
+	addCommand({
+		name: "gitStatus",
+		description: "Git status",
+		readOnly: true,
+		requiresView: false,
+		run() {
+			acode.exec("git-status");
+			return true;
+		},
+	});
+	addCommand({
+		name: "gitCommit",
+		description: "Git commit",
+		readOnly: false,
+		requiresView: false,
+		run() {
+			acode.exec("git-commit");
+			return true;
+		},
+	});
+	addCommand({
+		name: "gitPull",
+		description: "Git pull",
+		readOnly: false,
+		requiresView: false,
+		run() {
+			acode.exec("git-pull");
+			return true;
+		},
+	});
+	addCommand({
+		name: "gitPush",
+		description: "Git push",
+		readOnly: false,
+		requiresView: false,
+		run() {
+			acode.exec("git-push");
+			return true;
+		},
+	});
+	addCommand({
 		name: "saveFile",
 		description: "Save current file",
 		readOnly: true,

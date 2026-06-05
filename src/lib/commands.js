@@ -2,11 +2,13 @@ import fsOperation from "fileSystem";
 import { selectAll } from "@codemirror/commands";
 import Sidebar from "components/sidebar";
 import { TerminalManager } from "components/terminal";
+import alert from "dialogs/alert";
 import color from "dialogs/color";
 import confirm from "dialogs/confirm";
 import prompt from "dialogs/prompt";
 import select from "dialogs/select";
 import actions from "handlers/quickTools";
+import sidebarApps from "sidebarApps";
 import recents from "lib/recents";
 import About from "pages/about";
 import FileBrowser from "pages/fileBrowser";
@@ -28,8 +30,9 @@ import Url from "utils/Url";
 import checkFiles from "./checkFiles";
 import config from "./config";
 import EditorFile from "./editorFile";
+import gitService from "./git";
 import openFile from "./openFile";
-import openFolder from "./openFolder";
+import openFolder, { addedFolder } from "./openFolder";
 import run from "./run";
 import saveState from "./saveState";
 import appSettings from "./settings";
@@ -81,6 +84,12 @@ function getTabsRelativeToFile(side, referenceFile) {
 			return files.filter((_, index) => index !== activeIndex);
 		default:
 			return [];
+	}
+
+	function getGitTargetUrl() {
+		const activeFileUrl = editorManager.activeFile?.uri;
+		if (activeFileUrl) return activeFileUrl;
+		return addedFolder[0]?.url;
 	}
 }
 
@@ -181,6 +190,117 @@ export default {
 	},
 	"command-palette"() {
 		commandPalette();
+	},
+	"git-open-panel"() {
+		sidebarApps.activate?.("git");
+		Sidebar.show();
+	},
+	async "git-status"(url) {
+		const targetUrl = url || getGitTargetUrl();
+		if (!targetUrl) return;
+		try {
+			const status = await gitService.status(targetUrl, { force: true });
+			const text = status.entries
+				.slice(0, 80)
+				.map((entry) => `${entry.x}${entry.y} ${entry.path}`)
+				.join("\n");
+			alert(
+				strings.git || "Git",
+				text || strings["working tree clean"] || "Working tree clean",
+			);
+		} catch (error) {
+			helpers.error(error);
+		}
+	},
+	async "git-log"(url) {
+		const targetUrl = url || getGitTargetUrl();
+		if (!targetUrl) return;
+		try {
+			const log = await gitService.log(targetUrl, 50);
+			alert(strings["commit history"] || "Commit history", log.entries.join("\n"));
+		} catch (error) {
+			helpers.error(error);
+		}
+	},
+	async "git-diff"(url) {
+		const targetUrl = url || getGitTargetUrl();
+		if (!targetUrl) return;
+		try {
+			const diff = await gitService.diff(targetUrl);
+			alert(strings.diff || "Diff", (diff.output || "No diff").slice(0, 12000));
+		} catch (error) {
+			helpers.error(error);
+		}
+	},
+	async "git-stage-all"(url) {
+		const targetUrl = url || getGitTargetUrl();
+		if (!targetUrl) return;
+		try {
+			await gitService.add(targetUrl);
+			window.toast(strings.success);
+		} catch (error) {
+			helpers.error(error);
+		}
+	},
+	async "git-commit"(url) {
+		const targetUrl = url || getGitTargetUrl();
+		if (!targetUrl) return;
+		const message = await prompt(strings.commit || "Commit", "", "text", {
+			required: true,
+		});
+		if (!message) return;
+		try {
+			await gitService.commit(targetUrl, message);
+			window.toast(strings.success);
+		} catch (error) {
+			helpers.error(error);
+		}
+	},
+	async "git-switch-branch"(url) {
+		const targetUrl = url || getGitTargetUrl();
+		if (!targetUrl) return;
+		try {
+			const branches = await gitService.branchList(targetUrl);
+			const selected = await select(
+				strings.branch || "Branch",
+				branches.branches.map((branch) => [branch, branch]),
+			);
+			if (!selected) return;
+			await gitService.switchBranch(targetUrl, selected);
+			window.toast(strings.success);
+		} catch (error) {
+			helpers.error(error);
+		}
+	},
+	async "git-fetch"(url) {
+		const targetUrl = url || getGitTargetUrl();
+		if (!targetUrl) return;
+		try {
+			await gitService.fetch(targetUrl);
+			window.toast(strings.success);
+		} catch (error) {
+			helpers.error(error);
+		}
+	},
+	async "git-pull"(url) {
+		const targetUrl = url || getGitTargetUrl();
+		if (!targetUrl) return;
+		try {
+			await gitService.pull(targetUrl);
+			window.toast(strings.success);
+		} catch (error) {
+			helpers.error(error);
+		}
+	},
+	async "git-push"(url) {
+		const targetUrl = url || getGitTargetUrl();
+		if (!targetUrl) return;
+		try {
+			await gitService.push(targetUrl);
+			window.toast(strings.success);
+		} catch (error) {
+			helpers.error(error);
+		}
 	},
 	"disable-fullscreen"() {
 		app.classList.remove("fullscreen-mode");

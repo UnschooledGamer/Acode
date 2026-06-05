@@ -11,6 +11,7 @@ import confirm from "dialogs/confirm";
 import prompt from "dialogs/prompt";
 import select from "dialogs/select";
 import escapeStringRegexp from "escape-string-regexp";
+import gitService from "lib/git";
 import FileBrowser from "pages/fileBrowser";
 import helpers from "utils/helpers";
 import Path from "utils/Path";
@@ -21,72 +22,12 @@ import * as FileList from "./fileList";
 import openFile from "./openFile";
 import recents from "./recents";
 import appSettings from "./settings";
-
-const isTermuxSafUri = (value = "") =>
-	value.startsWith("content://com.termux.documents/tree/");
-const isAcodeTerminalPublicSafUri = (value = "") =>
-	value.startsWith("content://com.foxdebug.acode.documents/tree/");
-const isTerminalSafUri = (value = "") =>
-	isTermuxSafUri(value) || isAcodeTerminalPublicSafUri(value);
-
-const getTerminalPaths = () => {
-	const packageName = window.BuildInfo?.packageName || "com.foxdebug.acode";
-	const dataDir = `/data/user/0/${packageName}`;
-	const alpineRoot = `${dataDir}/files/alpine`;
-	const publicDir = `${dataDir}/files/public`;
-	return { alpineRoot, publicDir, dataDir };
-};
-
-const isTerminalAccessiblePath = (url = "") => {
-	if (isAcodeTerminalPublicSafUri(url)) return true;
-	const { alpineRoot, publicDir } = getTerminalPaths();
-	const cleanUrl = url.replace(/^file:\/\//, "");
-	if (cleanUrl.startsWith(alpineRoot) || cleanUrl.startsWith(publicDir)) {
-		return true;
-	}
-	return false;
-};
-
-const convertToProotPath = (url = "") => {
-	const { alpineRoot, publicDir } = getTerminalPaths();
-	if (isAcodeTerminalPublicSafUri(url)) {
-		try {
-			const { docId } = Uri.parse(url);
-			const cleanDocId = /::/.test(url)
-				? decodeURIComponent(docId || "")
-				: docId || "";
-			if (!cleanDocId) return "/public";
-			if (cleanDocId.startsWith(publicDir)) {
-				return cleanDocId.replace(publicDir, "/public") || "/public";
-			}
-			if (cleanDocId.startsWith("/public")) {
-				return cleanDocId;
-			}
-			if (cleanDocId.startsWith("public:")) {
-				const relativePath = cleanDocId.slice("public:".length);
-				return relativePath ? Path.join("/public", relativePath) : "/public";
-			}
-			const relativePath = cleanDocId
-				.replace(/^\/+/, "")
-				.replace(/^public\//, "");
-			return relativePath ? Path.join("/public", relativePath) : "/public";
-		} catch (error) {
-			console.warn(
-				`Failed to parse public SAF URI for terminal conversion: ${url}`,
-			);
-			return "/public";
-		}
-	}
-	const cleanUrl = url.replace(/^file:\/\//, "");
-	if (cleanUrl.startsWith(publicDir)) {
-		return cleanUrl.replace(publicDir, "/public");
-	}
-	if (cleanUrl.startsWith(alpineRoot)) {
-		return cleanUrl.replace(alpineRoot, "") || "/";
-	}
-	console.warn(`Unrecognized path for terminal conversion: ${url}`);
-	return cleanUrl;
-};
+import {
+	convertToProotPath,
+	isTerminalAccessiblePath,
+	isTerminalSafUri,
+	isTermuxSafUri,
+} from "./terminalPathUtils";
 
 /**
  * @typedef {import('../components/collapsableList').Collapsible} Collapsible
@@ -356,11 +297,22 @@ async function handleContextmenu(type, url, name, $target) {
 		strings["install as plugin"] || "Install as Plugin",
 		"extension",
 	];
+	const GIT_STATUS = ["git-status", strings.git || "Git", "source"];
+	const GIT_STAGE = ["git-stage", strings["stage"] || "Stage", "add"];
+	const GIT_DIFF = ["git-diff", strings.diff || "Diff", "difference"];
+	const GIT_OPEN_PANEL = [
+		"git-open-panel",
+		strings["open git panel"] || "Open Git Panel",
+		"source",
+	];
 
 	let options;
 
 	if (helpers.isFile(type)) {
 		options = [COPY, CUT, COPY_RELATIVE_PATH, RENAME, REMOVE];
+		if (await gitService.getRepository(url)) {
+			options.push(GIT_STAGE, GIT_DIFF, GIT_STATUS);
+		}
 		if (
 			url.toLowerCase().endsWith(".zip") &&
 			(await fsOperation(
@@ -371,6 +323,9 @@ async function handleContextmenu(type, url, name, $target) {
 		}
 	} else if (helpers.isDir(type)) {
 		options = [COPY, CUT, COPY_RELATIVE_PATH, REMOVE, RENAME];
+		if (await gitService.getRepository(url)) {
+			options.push(GIT_STATUS, GIT_OPEN_PANEL);
+		}
 
 		if (clipBoard.url != null) {
 			options.push(PASTE);
@@ -388,6 +343,9 @@ async function handleContextmenu(type, url, name, $target) {
 		}
 	} else if (type === "root") {
 		options = [];
+		if (await gitService.getRepository(url)) {
+			options.push(GIT_STATUS, GIT_OPEN_PANEL);
+		}
 
 		if (clipBoard.url != null) {
 			options.push(PASTE);
@@ -470,6 +428,18 @@ function execOperation(type, action, url, $target, name) {
 
 		case "copy-relative-path":
 			return copyRelativePath();
+
+		case "git-open-panel":
+			return openGitPanel();
+
+		case "git-status":
+			return showGitStatus();
+
+		case "git-stage":
+			return stageInGit();
+
+		case "git-diff":
+			return showGitDiff();
 	}
 
 	async function installPlugin() {
@@ -494,6 +464,51 @@ function execOperation(type, action, url, $target, name) {
 			if (!url) {
 				console.error("File path not available");
 				return;
+			}
+
+			async function openGitPanel() {
+				try {
+					sidebarApps.activate?.("git");
+					Sidebar.show();
+				} catch (error) {
+					helpers.error(error);
+				}
+			}
+
+			async function showGitStatus() {
+				try {
+					const status = await gitService.status(url, { force: true });
+					const lines = status.entries
+						.map((entry) => `${entry.x}${entry.y} ${entry.path}`)
+						.slice(0, 80);
+					await alert(
+						`${strings.git || "Git"}: ${name}`,
+						lines.length
+							? lines.join("\n")
+							: strings["working tree clean"] || "Working tree clean",
+					);
+				} catch (error) {
+					helpers.error(error);
+				}
+			}
+
+			async function stageInGit() {
+				try {
+					await gitService.addFromUrl(url, url);
+					toast(strings.success);
+				} catch (error) {
+					helpers.error(error);
+				}
+			}
+
+			async function showGitDiff() {
+				try {
+					const diff = await gitService.diff(url);
+					const text = diff.output || strings["no diff"] || "No diff";
+					await alert(strings.diff || "Diff", text.slice(0, 12000));
+				} catch (error) {
+					helpers.error(error);
+				}
 			}
 
 			if (!rootUrl) {
