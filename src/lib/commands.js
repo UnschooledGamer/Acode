@@ -85,12 +85,12 @@ function getTabsRelativeToFile(side, referenceFile) {
 		default:
 			return [];
 	}
+}
 
-	function getGitTargetUrl() {
-		const activeFileUrl = editorManager.activeFile?.uri;
-		if (activeFileUrl) return activeFileUrl;
-		return addedFolder[0]?.url;
-	}
+function getGitTargetUrl() {
+	const activeFileUrl = editorManager.activeFile?.uri;
+	if (activeFileUrl) return activeFileUrl;
+	return addedFolder[0]?.url;
 }
 
 async function closeTabs(files, options = {}) {

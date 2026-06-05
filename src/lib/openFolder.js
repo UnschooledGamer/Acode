@@ -458,57 +458,57 @@ function execOperation(type, action, url, $target, name) {
 		}
 	}
 
+	async function openGitPanel() {
+		try {
+			sidebarApps.activate?.("git");
+			Sidebar.show();
+		} catch (error) {
+			helpers.error(error);
+		}
+	}
+
+	async function showGitStatus() {
+		try {
+			const status = await gitService.status(url, { force: true });
+			const lines = status.entries
+				.map((entry) => `${entry.x}${entry.y} ${entry.path}`)
+				.slice(0, 80);
+			await alert(
+				`${strings.git || "Git"}: ${name}`,
+				lines.length
+					? lines.join("\n")
+					: strings["working tree clean"] || "Working tree clean",
+			);
+		} catch (error) {
+			helpers.error(error);
+		}
+	}
+
+	async function stageInGit() {
+		try {
+			await gitService.addFromUrl(url, url);
+			toast(strings.success);
+		} catch (error) {
+			helpers.error(error);
+		}
+	}
+
+	async function showGitDiff() {
+		try {
+			const diff = await gitService.diff(url);
+			const text = diff.output || strings["no diff"] || "No diff";
+			await alert(strings.diff || "Diff", text.slice(0, 12000));
+		} catch (error) {
+			helpers.error(error);
+		}
+	}
+
 	async function copyRelativePath() {
 		try {
 			// Validate inputs
 			if (!url) {
 				console.error("File path not available");
 				return;
-			}
-
-			async function openGitPanel() {
-				try {
-					sidebarApps.activate?.("git");
-					Sidebar.show();
-				} catch (error) {
-					helpers.error(error);
-				}
-			}
-
-			async function showGitStatus() {
-				try {
-					const status = await gitService.status(url, { force: true });
-					const lines = status.entries
-						.map((entry) => `${entry.x}${entry.y} ${entry.path}`)
-						.slice(0, 80);
-					await alert(
-						`${strings.git || "Git"}: ${name}`,
-						lines.length
-							? lines.join("\n")
-							: strings["working tree clean"] || "Working tree clean",
-					);
-				} catch (error) {
-					helpers.error(error);
-				}
-			}
-
-			async function stageInGit() {
-				try {
-					await gitService.addFromUrl(url, url);
-					toast(strings.success);
-				} catch (error) {
-					helpers.error(error);
-				}
-			}
-
-			async function showGitDiff() {
-				try {
-					const diff = await gitService.diff(url);
-					const text = diff.output || strings["no diff"] || "No diff";
-					await alert(strings.diff || "Diff", text.slice(0, 12000));
-				} catch (error) {
-					helpers.error(error);
-				}
 			}
 
 			if (!rootUrl) {
