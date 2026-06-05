@@ -1,4 +1,4 @@
-/node_modules
+node_modules
 /build.json
 /www/build
 /plugins
@@ -19,3 +19,5 @@ graphify-out/
 .gradle/
 local.properties
 tsconfig.tsbuildinfo
+.dev-cert.pem
+.dev-key.pem
