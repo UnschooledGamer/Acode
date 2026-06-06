@@ -99,6 +99,7 @@ if (isTerminalSafUri(parsedUrl)) {
 return {
 axsPath: convertToProotPath(parsedUrl),
 directPath: "",
+isExternal: true,
 canAxs: true,
 canDirect: false,
 };
@@ -114,15 +115,15 @@ throw new Error("Unsupported repository path");
 }
 
 const directPath = localPath;
-const canDirect =
-directPath.startsWith("/sdcard") ||
-directPath.startsWith("/storage") ||
-directPath.startsWith("/data");
+const isExternal =
+directPath.startsWith("/sdcard") || directPath.startsWith("/storage");
+const canDirect = isExternal || directPath.startsWith("/data");
 
 return {
 axsPath: convertToProotPath(parsedUrl),
 directPath,
-canAxs: true,
+isExternal,
+canAxs: isExternal,
 canDirect,
 };
 }
@@ -131,7 +132,7 @@ async resolveBackend(url) {
 const resolved = this.resolvePath(url);
 const fullStorageGranted = await this.hasFullStorageAccess();
 
-if (resolved.canDirect && fullStorageGranted) {
+if (resolved.canDirect && (!resolved.isExternal || fullStorageGranted)) {
 return {
 runner: this.#directRunner,
 path: resolved.directPath,
