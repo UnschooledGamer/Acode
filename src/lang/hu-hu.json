@@ -595,6 +595,7 @@
 	"lsp-version-line": "Verzió: {version}",
 	"lsp-view-initialization-options": "Előkészítési beállítások megtekintése",
 	"settings-category-about-acode": "Az Acode névjegye",
+	"settings-category-discover-apps": "Fedezz fel további alkalmazásokat",
 	"settings-category-advanced": "Speciális",
 	"settings-category-assistance": "Segítségnyújtás",
 	"settings-category-core": "Alapvető beállítások",
@@ -742,5 +743,9 @@
 	"terminal:failsafe": "Vészhelyzeti mód",
 	"terminal:failsafe-info": "Terminál indítása a rendszerhéjjal",
 	"auto rename tags": "Címkék automatikus átnevezése",
-	"settings-info-editor-auto-rename-tags": "A páros nyitó vagy záró címke automatikus átnevezése HTML-szerű címkék szerkesztése közben."
+	"settings-info-editor-auto-rename-tags": "A páros nyitó vagy záró címke automatikus átnevezése HTML-szerű címkék szerkesztése közben.",
+	"copying items": "{count} elem másolása…",
+	"cannot paste folder into itself": "A mappa nem másolható önmagába",
+	"folder already exists": "A mappa már létezik",
+	"file already exists force named": "A(z) „{name}” nevű fájl már létezik. Felülírja?"
 }

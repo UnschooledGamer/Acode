@@ -33,6 +33,7 @@ declare type LangStrings = {
   "failed": string;
   "file already exists": string;
   "file already exists force": string;
+  "file already exists force named": string;
   "file changed": string;
   "file deleted": string;
   "file is not supported": string;
@@ -413,6 +414,9 @@ declare type LangStrings = {
   "rename not supported": string;
   "compress": string;
   "copy uri": string;
+  "copying items": string;
+  "cannot paste folder into itself": string;
+  "folder already exists": string;
   "delete entries": string;
   "deleting items": string;
   "import project zip": string;
@@ -613,6 +617,7 @@ declare type LangStrings = {
   "lsp-view-initialization-options": string;
   "settings-category-about-acode": string;
   "settings-category-advanced": string;
+  "settings-category-discover-apps": string;
   "settings-category-assistance": string;
   "settings-category-core": string;
   "settings-category-cursor": string;
