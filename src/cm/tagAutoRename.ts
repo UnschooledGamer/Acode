@@ -24,7 +24,7 @@ interface ChangedRange {
 // the surrounding `<...>` in typical tag edits.
 const TAG_CONTEXT_LOOKAROUND = 128;
 
-function hasTagBoundary(text: string): boolean {
+function hasAngleBracket(text: string): boolean {
 	return text.includes("<") || text.includes(">");
 }
 
@@ -36,10 +36,10 @@ function rangeMightAffectTagContext(
 	toB: number,
 ): boolean {
 	const removed = transaction.startState.doc.sliceString(fromA, toA);
-	if (hasTagBoundary(removed)) return true;
+	if (hasAngleBracket(removed)) return true;
 
 	const inserted = transaction.newDoc.sliceString(fromB, toB);
-	if (hasTagBoundary(inserted)) return true;
+	if (hasAngleBracket(inserted)) return true;
 
 	const start = Math.max(0, fromA - TAG_CONTEXT_LOOKAROUND);
 	const end = Math.min(transaction.startState.doc.length, toA + TAG_CONTEXT_LOOKAROUND);
