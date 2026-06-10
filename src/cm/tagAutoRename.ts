@@ -20,6 +20,8 @@ interface ChangedRange {
 	mightAffectTagContext: boolean;
 }
 
+// Keep this window small enough for cheap scans but wide enough to include
+// the surrounding `<...>` in typical tag edits.
 const TAG_CONTEXT_LOOKAROUND = 128;
 
 function hasTagBoundary(text: string): boolean {

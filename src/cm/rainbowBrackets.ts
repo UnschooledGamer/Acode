@@ -23,6 +23,7 @@ const DEFAULT_LIGHT_COLORS = [
 ];
 
 const BLOCK_SIZE = 2048;
+// Higher cap improves cache hit-rate while scrolling large files.
 const MAX_BLOCK_CACHE_ENTRIES = 384;
 const MIN_LOOK_BEHIND = 4000;
 const MAX_LOOK_BEHIND = 24000;
