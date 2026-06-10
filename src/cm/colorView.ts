@@ -306,6 +306,7 @@ class ColorViewPlugin {
 	flushTimer = 0;
 	pendingView: EditorView | null = null;
 	pendingDirtyRanges: DocRange[] = [];
+	lastCanBeEdited: boolean | null = null;
 
 	constructor(view: EditorView) {
 		this.decorations = Decoration.none;
@@ -320,7 +321,14 @@ class ColorViewPlugin {
 		const readOnly = update.view.contentDOM.ariaReadOnly === "true";
 		const editable = update.view.contentDOM.contentEditable === "true";
 		const canBeEdited = readOnly === false && editable;
-		this.changePicker(update.view, canBeEdited);
+		const shouldSyncPicker =
+			this.lastCanBeEdited !== canBeEdited ||
+			update.docChanged ||
+			update.viewportChanged;
+		if (shouldSyncPicker) {
+			this.changePicker(update.view, canBeEdited);
+			this.lastCanBeEdited = canBeEdited;
+		}
 	}
 
 	scheduleVisibleRanges(view: EditorView): void {
@@ -410,6 +418,7 @@ class ColorViewPlugin {
 		this.pendingView = null;
 		this.pendingDirtyRanges = [];
 		this.visibleRanges = [];
+		this.lastCanBeEdited = null;
 	}
 }
 

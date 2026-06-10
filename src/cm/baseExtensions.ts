@@ -41,7 +41,7 @@ export default function createBaseExtensions(): Extension[] {
 		rectangularSelection(),
 		crosshairCursor(),
 		highlightActiveLine(),
-		highlightSelectionMatches(),
+		highlightSelectionMatches({ minSelectionLength: 3, maxMatches: 100 }),
 		keymap.of([...completionKeymap, ...defaultKeymap, ...historyKeymap]),
 		// This prevents tooltips from being going out of the editor area
 		tooltips({

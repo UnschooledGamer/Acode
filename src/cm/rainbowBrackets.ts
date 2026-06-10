@@ -23,8 +23,7 @@ const DEFAULT_LIGHT_COLORS = [
 ];
 
 const BLOCK_SIZE = 2048;
-const MAX_BLOCK_CACHE_ENTRIES = 192;
-const CONTEXT_SIGNATURE_DEPTH = 4;
+const MAX_BLOCK_CACHE_ENTRIES = 384;
 const MIN_LOOK_BEHIND = 4000;
 const MAX_LOOK_BEHIND = 24000;
 const DEFAULT_EXACT_SCAN_LIMIT = 24000;
@@ -156,40 +155,13 @@ function getSkipContextEnd(
 	return -1;
 }
 
-function getContextChainSignature(
-	tree: ReturnType<typeof syntaxTree>,
-	pos: number,
-): string {
-	if (tree.length <= 0) return "";
-
-	const clampedPos = Math.max(0, Math.min(tree.length - 1, pos));
-	let node: SyntaxNode | null = tree.resolveInner(clampedPos, 1);
-	const parts: string[] = [];
-
-	for (let depth = 0; node && depth < CONTEXT_SIGNATURE_DEPTH; depth++) {
-		parts.push(node.name);
-		node = node.parent;
-	}
-
-	return parts.join(">");
-}
-
-function getBlockContextSignature(
-	tree: ReturnType<typeof syntaxTree>,
-	blockStart: number,
-	blockEnd: number,
-): string {
-	if (blockEnd <= blockStart) return "";
-	const endPos = Math.max(blockStart, blockEnd - 1);
-	return `${getContextChainSignature(tree, blockStart)}|${getContextChainSignature(tree, endPos)}`;
-}
-
 function getBlockCacheKey(
+	docGeneration: number,
+	blockStart: number,
 	blockText: string,
 	initialSkipChars: number,
-	contextSignature: string,
 ): string {
-	return `${initialSkipChars}\u0000${contextSignature}\u0000${blockText}`;
+	return `${docGeneration}\u0000${blockStart}\u0000${initialSkipChars}\u0000${blockText}`;
 }
 
 function tokenizeBlock(
@@ -316,6 +288,7 @@ export function rainbowBrackets(options: RainbowBracketsOptions = {}) {
 			decorations: DecorationSet;
 			blockCache = new Map<string, BlockCacheEntry>();
 			raf = 0;
+			docGeneration = 0;
 			pendingView: EditorView | null = null;
 
 			constructor(view: EditorView) {
@@ -323,6 +296,9 @@ export function rainbowBrackets(options: RainbowBracketsOptions = {}) {
 			}
 
 			update(update: ViewUpdate) {
+				if (update.docChanged) {
+					this.docGeneration++;
+				}
 				if (!update.docChanged && !update.viewportChanged) return;
 				this.scheduleBuild(update.view);
 			}
@@ -363,9 +339,10 @@ export function rainbowBrackets(options: RainbowBracketsOptions = {}) {
 					const blockEnd = Math.min(scanEnd, blockStart + BLOCK_SIZE);
 					const blockText = view.state.doc.sliceString(blockStart, blockEnd);
 					const cacheKey = getBlockCacheKey(
+						this.docGeneration,
+						blockStart,
 						blockText,
 						carrySkipChars,
-						getBlockContextSignature(tree, blockStart, blockEnd),
 					);
 					let cachedBlock = this.getCachedBlock(cacheKey);
 
